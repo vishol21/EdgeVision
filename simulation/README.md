@@ -36,6 +36,8 @@ The device capacities and linear power values follow the official `DCNSFog` devi
 
 ## Metrics
 
+The Stage 2 camera matrix and reproducible validation commands are recorded in [validation/STAGE2_VALIDATION.md](validation/STAGE2_VALIDATION.md). It checks actual sensor construction, captured emission timing and paired API workloads at 1, 2, 3, 5, 6 and 10 cameras without changing production workload assumptions.
+
 - `loopLatencyMs` is the complete camera-to-cloud-storage application loop average from the iFogSim `TimeKeeper`. `analyticsLatencyMs` separately measures camera emission to arrival at `Event_Detector`, using the same tuple IDs and CloudSim clock. Either is `null` if no complete measurement was recorded. This distinguishes edge analytics response from full delivery to cloud storage.
 - `networkUsageMb` counts modeled camera-frame payload bytes and tuple bytes sent over fog-device links, converted using 1 MB = 1,000,000 bytes. It excludes protocol headers and module-deployment control traffic.
 - `nativeNetworkUsageIndex` is the simulator's `NetworkUsageMonitor` total divided by the configured simulation horizon. In this iFogSim version that monitor sums tuple-size × link-latency, so it is retained as a native index and is not mislabeled as MB.

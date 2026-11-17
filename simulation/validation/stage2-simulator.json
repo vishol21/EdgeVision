@@ -1,0 +1,839 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-11-17T09:40:11.1300814Z",
+  "type": "synthetic_virtual_camera_validation",
+  "simulatorRevision": "5f68d3947e450d8d2b4af42670be819206be68c9",
+  "method": "Test-only factory inspection and captured simulation-clock emission trace; separate fresh JVM per source inspection or scenario.",
+  "limitation": "Round-robin timing phases are inferred from the aggregate captured trace; the trace does not independently tag each emission with a source ID. Factory inspection verifies actual named Sensor entities separately. These are simulator checks, not hardware measurements.",
+  "cases": [
+    {
+      "cameraCount": 1,
+      "sources": {
+        "cameraCount": 1,
+        "actualSensorCount": 1,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 1,
+        "workloadProfileId": "0cfbf1054ef74b48a940de71c572ebdb",
+        "expectedTuples": 150,
+        "actualEmittedTuples": 150,
+        "actualProcessedTuples": 150,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.909999999999965,
+        "maximumScheduleErrorSeconds": 3.552713678800501e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 1,
+        "workloadProfileId": "0cfbf1054ef74b48a940de71c572ebdb",
+        "expectedTuples": 150,
+        "actualEmittedTuples": 150,
+        "actualProcessedTuples": 150,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.909999999999965,
+        "maximumScheduleErrorSeconds": 3.552713678800501e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      }
+    },
+    {
+      "cameraCount": 2,
+      "sources": {
+        "cameraCount": 2,
+        "actualSensorCount": 2,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-02",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 2,
+        "workloadProfileId": "dfe6625193cf4dca9d1ac0b926d143fc",
+        "expectedTuples": 300,
+        "actualEmittedTuples": 300,
+        "actualProcessedTuples": 300,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.959999999999964,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.060000000000000005,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 2,
+        "workloadProfileId": "dfe6625193cf4dca9d1ac0b926d143fc",
+        "expectedTuples": 300,
+        "actualEmittedTuples": 300,
+        "actualProcessedTuples": 300,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.959999999999964,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.060000000000000005,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      }
+    },
+    {
+      "cameraCount": 3,
+      "sources": {
+        "cameraCount": 3,
+        "actualSensorCount": 3,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-02",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-03",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 3,
+        "workloadProfileId": "2052a41e813045719d1e223915e3ea46",
+        "expectedTuples": 450,
+        "actualEmittedTuples": 450,
+        "actualProcessedTuples": 450,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.976666666666631,
+        "maximumScheduleErrorSeconds": 3.552713678800501e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.043333333333333335,
+            "lastEmissionSeconds": 14.943333333333298,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07666666666666666,
+            "lastEmissionSeconds": 14.976666666666631,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 3,
+        "workloadProfileId": "2052a41e813045719d1e223915e3ea46",
+        "expectedTuples": 450,
+        "actualEmittedTuples": 450,
+        "actualProcessedTuples": 450,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.976666666666631,
+        "maximumScheduleErrorSeconds": 3.552713678800501e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.043333333333333335,
+            "lastEmissionSeconds": 14.943333333333298,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07666666666666666,
+            "lastEmissionSeconds": 14.976666666666631,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      }
+    },
+    {
+      "cameraCount": 5,
+      "sources": {
+        "cameraCount": 5,
+        "actualSensorCount": 5,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-02",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-03",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-04",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-05",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 5,
+        "workloadProfileId": "402b7f10b92c468286d13022c5b1b96d",
+        "expectedTuples": 750,
+        "actualEmittedTuples": 750,
+        "actualProcessedTuples": 750,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.989999999999965,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.03,
+            "lastEmissionSeconds": 14.929999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.05,
+            "lastEmissionSeconds": 14.949999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07,
+            "lastEmissionSeconds": 14.969999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09,
+            "lastEmissionSeconds": 14.989999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 5,
+        "workloadProfileId": "402b7f10b92c468286d13022c5b1b96d",
+        "expectedTuples": 750,
+        "actualEmittedTuples": 750,
+        "actualProcessedTuples": 750,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.989999999999965,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.03,
+            "lastEmissionSeconds": 14.929999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.05,
+            "lastEmissionSeconds": 14.949999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07,
+            "lastEmissionSeconds": 14.969999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09,
+            "lastEmissionSeconds": 14.989999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          }
+        ]
+      }
+    },
+    {
+      "cameraCount": 6,
+      "sources": {
+        "cameraCount": 6,
+        "actualSensorCount": 6,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-02",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-03",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-04",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-05",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-06",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 6,
+        "workloadProfileId": "12d1e58e994c4595b94bd5c4a8334447",
+        "expectedTuples": 900,
+        "actualEmittedTuples": 900,
+        "actualProcessedTuples": 900,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.993333333333297,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.026666666666666665,
+            "lastEmissionSeconds": 14.92666666666663,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.043333333333333335,
+            "lastEmissionSeconds": 14.943333333333298,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.06000000000000001,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07666666666666666,
+            "lastEmissionSeconds": 14.976666666666631,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 5,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09333333333333332,
+            "lastEmissionSeconds": 14.993333333333297,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 6,
+        "workloadProfileId": "12d1e58e994c4595b94bd5c4a8334447",
+        "expectedTuples": 900,
+        "actualEmittedTuples": 900,
+        "actualProcessedTuples": 900,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.993333333333297,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.026666666666666665,
+            "lastEmissionSeconds": 14.92666666666663,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.043333333333333335,
+            "lastEmissionSeconds": 14.943333333333298,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.06000000000000001,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07666666666666666,
+            "lastEmissionSeconds": 14.976666666666631,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 5,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09333333333333332,
+            "lastEmissionSeconds": 14.993333333333297,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      }
+    },
+    {
+      "cameraCount": 10,
+      "sources": {
+        "cameraCount": 10,
+        "actualSensorCount": 10,
+        "sources": [
+          {
+            "sourceId": "virtual-camera-01",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-02",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-03",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-04",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-05",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-06",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-07",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-08",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-09",
+            "gateway": "edge-01",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          },
+          {
+            "sourceId": "virtual-camera-10",
+            "gateway": "edge-02",
+            "tupleIntervalSeconds": 0.1,
+            "finiteTupleCount": 150
+          }
+        ]
+      },
+      "cloud": {
+        "scenario": "cloud",
+        "cameraCount": 10,
+        "workloadProfileId": "d7ce088b2a04488bb97e5489c43c0a51",
+        "expectedTuples": 1500,
+        "actualEmittedTuples": 1500,
+        "actualProcessedTuples": 1500,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.999999999999963,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.02,
+            "lastEmissionSeconds": 14.919999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.03,
+            "lastEmissionSeconds": 14.929999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.04000000000000001,
+            "lastEmissionSeconds": 14.939999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.05,
+            "lastEmissionSeconds": 14.949999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 5,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.060000000000000005,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 6,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07,
+            "lastEmissionSeconds": 14.969999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 7,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.08,
+            "lastEmissionSeconds": 14.979999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 8,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09,
+            "lastEmissionSeconds": 14.989999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 9,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09999999999999999,
+            "lastEmissionSeconds": 14.999999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      },
+      "edge": {
+        "scenario": "edge",
+        "cameraCount": 10,
+        "workloadProfileId": "d7ce088b2a04488bb97e5489c43c0a51",
+        "expectedTuples": 1500,
+        "actualEmittedTuples": 1500,
+        "actualProcessedTuples": 1500,
+        "simulationStartupOffsetSeconds": 0.01,
+        "workloadWindowSeconds": 15,
+        "firstEmissionSeconds": 0.01,
+        "lastEmissionSeconds": 14.999999999999963,
+        "maximumScheduleErrorSeconds": 3.730349362740526e-14,
+        "roundRobinPhases": [
+          {
+            "phaseIndex": 0,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.01,
+            "lastEmissionSeconds": 14.909999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 1,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.02,
+            "lastEmissionSeconds": 14.919999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 2,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.03,
+            "lastEmissionSeconds": 14.929999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 3,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.04000000000000001,
+            "lastEmissionSeconds": 14.939999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 4,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.05,
+            "lastEmissionSeconds": 14.949999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 5,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.060000000000000005,
+            "lastEmissionSeconds": 14.959999999999964,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 6,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.07,
+            "lastEmissionSeconds": 14.969999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 7,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.08,
+            "lastEmissionSeconds": 14.979999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          },
+          {
+            "phaseIndex": 8,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09,
+            "lastEmissionSeconds": 14.989999999999965,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000053
+          },
+          {
+            "phaseIndex": 9,
+            "tupleCount": 150,
+            "firstEmissionSeconds": 0.09999999999999999,
+            "lastEmissionSeconds": 14.999999999999963,
+            "minimumIntervalSeconds": 0.09999999999999964,
+            "maximumIntervalSeconds": 0.10000000000000009
+          }
+        ]
+      }
+    }
+  ],
+  "testedProductionCommit": "687be247968f4e0c5472fc32068e3cdda76e5d76"
+}

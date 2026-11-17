@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-11-17T09:41:25.223Z",
+  "type": "synthetic_virtual_camera_api_validation",
+  "method": "Real paired Node/PowerShell/Java runs on an isolated project copy. Source construction and emission timing are independently checked by simulation/validate-cameras.ps1.",
+  "rejectedInputs": [
+    {
+      "action": "cloud",
+      "input": 0,
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": 11,
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": -1,
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": 1.5,
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": "5",
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": null,
+      "httpStatus": 400
+    },
+    {
+      "action": "cloud",
+      "input": true,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": 0,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": 11,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": -1,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": 1.5,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": "5",
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": null,
+      "httpStatus": 400
+    },
+    {
+      "action": "edge",
+      "input": true,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": 0,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": 11,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": -1,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": 1.5,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": "5",
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": null,
+      "httpStatus": 400
+    },
+    {
+      "action": "both",
+      "input": true,
+      "httpStatus": 400
+    }
+  ],
+  "cases": [
+    {
+      "cameraCount": 1,
+      "expectedTuples": 150,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "0693710d1cc04f358d26778fc7ed36ba",
+        "virtualCameraSources": 1,
+        "sourceIds": [
+          "virtual-camera-01"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 150
+      },
+      "cloudProcessedTuples": 150,
+      "edgeProcessedTuples": 150,
+      "profilesMatch": true,
+      "httpStatus": 200
+    },
+    {
+      "cameraCount": 2,
+      "expectedTuples": 300,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "f92754abebf34ccc8351b066721e452d",
+        "virtualCameraSources": 2,
+        "sourceIds": [
+          "virtual-camera-01",
+          "virtual-camera-02"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 300
+      },
+      "cloudProcessedTuples": 300,
+      "edgeProcessedTuples": 300,
+      "profilesMatch": true,
+      "httpStatus": 200
+    },
+    {
+      "cameraCount": 3,
+      "expectedTuples": 450,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "0a1c50af0d9147338fc3e5351cb2e396",
+        "virtualCameraSources": 3,
+        "sourceIds": [
+          "virtual-camera-01",
+          "virtual-camera-02",
+          "virtual-camera-03"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 450
+      },
+      "cloudProcessedTuples": 450,
+      "edgeProcessedTuples": 450,
+      "profilesMatch": true,
+      "httpStatus": 200
+    },
+    {
+      "cameraCount": 5,
+      "expectedTuples": 750,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "f3e98ea59edb4a768ede2645d78108e4",
+        "virtualCameraSources": 5,
+        "sourceIds": [
+          "virtual-camera-01",
+          "virtual-camera-02",
+          "virtual-camera-03",
+          "virtual-camera-04",
+          "virtual-camera-05"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 750
+      },
+      "cloudProcessedTuples": 750,
+      "edgeProcessedTuples": 750,
+      "profilesMatch": true,
+      "httpStatus": 200
+    },
+    {
+      "cameraCount": 6,
+      "expectedTuples": 900,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "de61dbfc58774035b743f629f0165cc4",
+        "virtualCameraSources": 6,
+        "sourceIds": [
+          "virtual-camera-01",
+          "virtual-camera-02",
+          "virtual-camera-03",
+          "virtual-camera-04",
+          "virtual-camera-05",
+          "virtual-camera-06"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 900
+      },
+      "cloudProcessedTuples": 900,
+      "edgeProcessedTuples": 900,
+      "profilesMatch": true,
+      "httpStatus": 200
+    },
+    {
+      "cameraCount": 10,
+      "expectedTuples": 1500,
+      "workloadProfile": {
+        "type": "standalone_virtual_camera",
+        "workloadProfileId": "be9ac220c1cb4a23861129456176028f",
+        "virtualCameraSources": 10,
+        "sourceIds": [
+          "virtual-camera-01",
+          "virtual-camera-02",
+          "virtual-camera-03",
+          "virtual-camera-04",
+          "virtual-camera-05",
+          "virtual-camera-06",
+          "virtual-camera-07",
+          "virtual-camera-08",
+          "virtual-camera-09",
+          "virtual-camera-10"
+        ],
+        "durationSeconds": 15,
+        "tupleIntervalMs": 100,
+        "tuplesPerCamera": 150,
+        "tupleCount": 1500
+      },
+      "cloudProcessedTuples": 1500,
+      "edgeProcessedTuples": 1500,
+      "profilesMatch": true,
+      "httpStatus": 200
+    }
+  ],
+  "testedProductionCommit": "687be247968f4e0c5472fc32068e3cdda76e5d76"
+}
