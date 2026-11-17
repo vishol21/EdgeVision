@@ -1,0 +1,3 @@
+[submodule "simulation/vendor/iFogSim"]
+	path = simulation/vendor/iFogSim
+	url = https://github.com/Cloudslab/iFogSim.git

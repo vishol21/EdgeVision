@@ -1,0 +1,53 @@
+{
+  "detection": {
+    "confidence": 0.25,
+    "model_filename": "yolo26n.pt",
+    "auto_download": true,
+    "assets_release": "v8.4.0",
+    "supported_classes": {
+      "person": 0,
+      "car": 2,
+      "motorcycle": 3,
+      "bus": 5
+    }
+  },
+  "upload": {
+    "max_file_size_bytes": 524288000,
+    "allowed_extensions": [".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm"]
+  },
+  "processing": {
+    "frame_interval": 1,
+    "output_fourcc": "mp4v"
+  },
+  "workload_profile": {
+    "frames_per_tuple": 1,
+    "tuple_payload_bytes": null,
+    "cpu_calibration": {
+      "mi_per_wall_second": null,
+      "reference_hardware": null,
+      "method": null
+    }
+  },
+  "tracking": {
+    "tracker": "bytetrack",
+    "track_buffer": 30,
+    "track_high_thresh": 0.25,
+    "track_low_thresh": 0.10,
+    "new_track_thresh": 0.25,
+    "match_thresh": 0.80,
+    "fuse_score": true,
+    "history_max_points": 300
+  },
+  "anomaly_thresholds": {
+    "loitering_seconds": 30.0,
+    "wrong_direction_min_travel_pixels": 50.0,
+    "wrong_direction_max_angle_degrees": 45.0,
+    "crowd_max_people": 10,
+    "vehicle_stopped_seconds": 30.0,
+    "vehicle_stopped_max_displacement_pixels": 10.0,
+    "crowd_confirm_seconds": 1.0,
+    "lost_track_timeout_seconds": 2.0,
+    "possible_fall_enabled": false
+  },
+  "regions": []
+}

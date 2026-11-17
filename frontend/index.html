@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>EdgeVision | Video Analytics &amp; iFogSim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="#dashboard"><span class="brand-mark">EV</span><span>EdgeVision</span></a>
+      <nav aria-label="Main navigation">
+        <a class="nav-link active" href="#dashboard"><span>01</span>Dashboard</a>
+        <a class="nav-link" href="#video-analytics"><span>02</span>Video Analytics</a>
+        <a class="nav-link" href="#simulation-comparison"><span>03</span>Simulation &amp; Comparison</a>
+      </nav>
+      <div class="sidebar-footer"><span class="status-light"></span> Local processing</div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><span>FINAL YEAR PROJECT <span class="separator">/</span> EDGE COMPUTING</span><span class="topbar-state"><span class="status-light"></span> EDGEVISION</span></header>
+
+      <section class="section dashboard-section" id="dashboard">
+        <div class="page-title">
+          <div><div class="eyebrow">EDGE COMPUTING · VIDEO ANALYTICS</div><h1>EdgeVision</h1><p>Local video analysis with YOLO and ByteTrack, alongside a separate iFogSim cloud-versus-edge study.</p></div>
+          <div class="status-card"><span class="label">SIMULATION STATUS</span><strong id="run-status">Ready</strong><span id="run-detail">No simulation is running.</span></div>
+        </div>
+      </section>
+
+      <section class="section" id="video-analytics">
+        <div class="section-heading"><div><div class="eyebrow">LOCAL PYTHON PROCESSING</div><h2>Video Analytics</h2></div><p>Upload a video to run YOLO detection, ByteTrack tracking and configured activity rules.</p></div>
+        <div class="panel upload-panel">
+          <div id="video-dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose or drop a video to analyze">
+            <input id="video-file" type="file" accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,video/*" hidden>
+            <strong>Drop a video here or <span>browse files</span></strong>
+            <small>MP4, AVI, MOV, MKV, WebM and other configured formats · max 500 MiB</small>
+          </div>
+          <div id="video-selection" class="video-selection" hidden>
+            <div class="video-preview-wrap"><video id="video-preview" controls playsinline preload="metadata"></video></div>
+            <div class="selected-file"><span id="selected-filename"></span><small id="selected-filesize"></small></div>
+          </div>
+          <div class="video-actions"><button id="analyze-button" class="button button-edge" disabled>Start Analysis</button><span id="video-status" role="status" aria-live="polite">Choose a video to begin.</span></div>
+          <div id="video-progress" class="progress-track" hidden><span></span></div>
+          <p id="video-error" class="video-error" role="alert" hidden></p>
+        </div>
+
+        <div id="video-results" class="video-results" hidden>
+          <div class="section-heading results-subheading"><div><div class="eyebrow">ACTUAL PROCESSOR REPORT</div><h2>Analysis Results</h2></div><a id="report-download" class="button" href="#" download>Download JSON report</a></div>
+          <p id="video-rule-note" class="simulation-note"></p>
+          <div class="analytics-metrics">
+            <article class="result-card"><span>PEOPLE DETECTIONS / TRACK OBSERVATIONS</span><strong id="people-detections">—</strong></article>
+            <article class="result-card"><span>UNIQUE PEOPLE TRACK IDs</span><strong id="people-tracks">—</strong></article>
+            <article class="result-card"><span>VEHICLE DETECTIONS / TRACK OBSERVATIONS</span><strong id="vehicle-detections">—</strong></article>
+            <article class="result-card"><span>UNIQUE VEHICLE TRACK IDs</span><strong id="vehicle-tracks">—</strong></article>
+            <article class="result-card"><span>PROCESSING SPEED</span><strong><span id="video-fps">—</span> <small>FPS</small></strong></article>
+            <article class="result-card"><span>PROCESSING DURATION</span><strong><span id="video-duration">—</span> <small>s</small></strong></article>
+            <article class="result-card"><span>UNUSUAL ACTIVITY EVENTS</span><strong id="event-total">—</strong></article>
+          </div>
+          <div class="analytics-breakdown">
+            <div class="panel">
+              <div class="panel-heading"><h3>Vehicle detections</h3><span>Tracked observations · unique IDs</span></div>
+              <div class="table-scroll"><table><thead><tr><th>Class</th><th>Observations</th><th>Unique IDs</th></tr></thead><tbody id="vehicle-table"></tbody></table></div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading"><h3>Tracked objects</h3><span>IDs reported by ByteTrack</span></div>
+              <div class="table-scroll"><table><thead><tr><th>Track ID</th><th>Class</th><th>First seen (s)</th><th>Last seen (s)</th></tr></thead><tbody id="tracking-table"></tbody></table></div>
+            </div>
+          </div>
+          <div class="panel event-panel"><div class="panel-heading"><h3>Unusual activity events</h3><span>Configured rules only</span></div><div id="event-list" class="event-list"></div></div>
+        </div>
+      </section>
+
+      <section class="section results-section" id="simulation-comparison">
+        <div class="section-heading"><div><div class="eyebrow">iFogSim WORKLOAD SIMULATION</div><h2>Simulation &amp; Comparison</h2></div><p id="results-note">No simulation results yet</p></div>
+        <p id="profile-run-info" class="simulation-note" role="status">Standalone scenario runs are available below. Video-linked comparisons use the workload generated by the selected video job.</p>
+        <button id="comparison-mode-button" class="button" type="button" hidden>Use virtual-camera simulation</button>
+        <div class="run-panel">
+          <div class="scenario-description"><strong>Choose a placement strategy</strong><span>Cloud-only sends analytics workloads to the cloud. Edge-based places analytics on fog nodes. Both use the existing iFogSim simulation.</span></div>
+          <div class="camera-workload-controls">
+            <label for="camera-count">Virtual cameras <output id="camera-count-value" for="camera-count">5</output></label>
+            <input id="camera-count" type="range" min="1" max="10" step="1" value="5" aria-describedby="camera-workload-hint">
+            <p id="camera-workload-hint">Each camera generates tuples every 100 ms for 15 seconds. Expected tuples for the next run: <strong id="expected-camera-tuples">750</strong>.</p>
+          </div>
+          <div class="button-row"><button class="button button-cloud" data-run="cloud">Run cloud-only</button><button class="button button-edge" data-run="edge">Run edge-based</button><button class="button button-both" data-run="both">Run both scenarios</button></div>
+          <div class="run-feedback" id="run-feedback" role="status" aria-live="polite">Ready. No simulation results yet.</div>
+          <div class="progress-track" id="progress-track" hidden><span></span></div>
+        </div>
+        <div class="result-summary">
+          <article class="result-card"><span>APPLICATION LATENCY</span><strong data-metric="latency">— <small>ms</small></strong></article>
+          <article class="result-card"><span>ANALYTICS LATENCY</span><strong data-metric="analyticsLatency">— <small>ms</small></strong></article>
+          <article class="result-card"><span>NETWORK USAGE</span><strong data-metric="networkUsage">— <small>MB</small></strong></article>
+          <article class="result-card"><span>ENERGY CONSUMPTION</span><strong data-metric="energy">— <small>J</small></strong></article>
+          <article class="result-card"><span>SIMULATION RUN TIME (WALL CLOCK)</span><strong data-metric="runtime">— <small>ms</small></strong></article>
+        </div>
+        <div class="results-layout">
+          <div class="panel chart-panel"><div class="panel-heading"><h3>Scenario comparison</h3><span>Cloud-only vs edge-based</span></div><div class="chart-grid">
+            <div class="chart-box"><span>Latency <small>ms</small></span><div class="chart-area"><canvas id="latency-chart" aria-label="Application latency comparison"></canvas></div></div>
+            <div class="chart-box"><span>Analytics latency <small>ms</small></span><div class="chart-area"><canvas id="analytics-latency-chart" aria-label="Analytics latency comparison"></canvas></div></div>
+            <div class="chart-box"><span>Network usage <small>MB</small></span><div class="chart-area"><canvas id="network-chart" aria-label="Network usage comparison"></canvas></div></div>
+            <div class="chart-box"><span>Energy <small>J</small></span><div class="chart-area"><canvas id="energy-chart" aria-label="Energy consumption comparison"></canvas></div></div>
+          </div></div>
+          <div class="panel table-panel"><div class="panel-heading"><h3>Results table</h3></div><div class="table-scroll"><table>
+            <thead><tr><th>Scenario</th><th>Status</th><th>Loop latency (ms)</th><th>Analytics latency (ms)</th><th>Network (MB)</th><th>Energy (J)</th><th>Processed tuples</th><th>Run time (wall ms)</th></tr></thead>
+            <tbody id="results-table-body"><tr><td class="empty-state" colspan="8">No simulation results yet</td></tr></tbody>
+          </table></div></div>
+        </div>
+      </section>
+      <footer class="footer">EdgeVision <span>·</span> Local video processing + separate iFogSim simulation</footer>
+    </main>
+  </div>
+</body>
+</html>

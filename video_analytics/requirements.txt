@@ -1,0 +1,8 @@
+# Verified Windows x64 package set for the project-local Python 3.14 environment.
+Flask==3.1.2
+lap==0.5.13
+opencv-python==4.14.0.94
+numpy==2.5.4
+torch==2.15.0
+torchvision==0.29.2
+ultralytics==8.4.213

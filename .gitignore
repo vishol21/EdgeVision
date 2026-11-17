@@ -1,0 +1,43 @@
+# Dependencies and Python environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Generated/private video artifacts and downloaded weights
+/video_analytics/uploads/
+/video_analytics/outputs/
+/video_analytics/evidence/
+/video_analytics/models/*.pt
+/video_analytics/models/*.runtime.yaml
+
+# Simulator build and generated run results
+/simulation/target/
+/results/
+
+# Logs, temporary files and editor metadata
+*.log
+*.tmp
+*.temp
+*.test-held
+*.stage3-test-held
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

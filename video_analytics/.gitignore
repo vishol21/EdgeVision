@@ -1,0 +1,12 @@
+.venv/
+.tmp/
+__pycache__/
+*.py[cod]
+uploads/*
+outputs/*
+evidence/*
+models/*.pt
+models/*.onnx
+models/*.engine
+!models/bytetrack.yaml
+tests/.runtime/
