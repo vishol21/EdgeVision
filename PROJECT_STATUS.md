@@ -5,8 +5,8 @@
 - Repository: https://github.com/vishol21/EdgeVision.git
 - Workspace: EdgeVision project root (absolute local path omitted from version control).
 - Current branch: main.
-- Current stage: Stage 5 feasibility study completed; publication review pending; no live implementation authorized; Stage 6 awaiting approval.
-- Overall progress: audit and Stages 1-4 published; Stage 5 hardware/network/software feasibility documented without application changes.
+- Current stage: Stage 6 reference-paper alignment completed locally; publication review pending; no live implementation authorized.
+- Overall progress: audit and Stages 1-5 published; Stage 6 selected full-text paper reviewed and implementation alignment documented.
 - Authority: user handover received 2026-11-17 explicitly directs Stage 0 first and requires approval for each subsequent stage.
 
 ## Stage table
@@ -18,7 +18,7 @@
 | 3 | Repeatable multi-camera experiments | Completed | User approved with yes after Stage 2 commit/push and Stage 3 questions |
 | 4 | Multiple uploaded CCTV videos | Completed | User approved with yah; later go on continued the active stage |
 | 5 | Investigate live CCTV/IP camera integration | Completed | User approved feasibility only; explicitly no hardware assumed and no live implementation |
-| 6 | Align implementation with selected research paper | Awaiting approval | Not received |
+| 6 | Align implementation with selected research paper | Completed | User approved continuation and supplied the selected full paper |
 | 7 | Performance evaluation | Not started | Not received |
 | 8 | Dashboard and system quality | Not started | Not received |
 | 9 | Final documentation and presentation | Not started | Not received |
@@ -203,8 +203,8 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 - Security/network work: none executed. No scans, stream connections, credential collection, firewall/router changes, port exposure or downloads/installations. HTTPS administration/TCP transport alone must not be treated as proof of encrypted video; concrete device/client transport needs testing later.
 - Browser verification: not applicable; no UI or live stream changed. Sources/citations are linked beside claims in the feasibility report. No physical camera, RTSP authentication, live codec/timeout/reconnect, 1080p inference, sustained resource or accuracy test performed.
 - Known issues/limits: no camera/NVR confirmed; bitrate, processing mode (all frames versus explicitly sampled), target freshness, retention, model/firmware and budget need decisions before a future implementation. The legacy latency-unit contract still needs an approved correction before mixing live and simulated latency in academic evaluation. No local video/webcam was presented as a deployed CCTV network.
-- Git review: three documentation/evidence files prepared for review. Proposed commit `Document 1080p RTSP camera feasibility and capacity requirements`. No Stage 5 commit/push until approved. Stage 4 commit cc7d18fb31d3e53598be2a6db097bbb6417379a4 already verified on origin/main.
-- Remaining tasks: approve publishing this study; obtain separate approval for Stage 6 reference-paper alignment and the actual selected paper. Live implementation is explicitly outside the current authorization and would need hardware details plus a concrete approved plan.
+- Git review: three documentation/evidence files prepared for review. Proposed commit `Document 1080p RTSP camera feasibility and capacity requirements`. Publication subsequently approved and completed as 564f5a4; origin/main verified. Stage 4 commit cc7d18fb31d3e53598be2a6db097bbb6417379a4 already verified on origin/main.
+- Remaining tasks: Stage 5 publication and Stage 6 continuation approved by the subsequent yes; obtain the actual user-selected paper before detailed alignment. Live implementation is explicitly outside the current authorization and would need hardware details plus a concrete approved plan.
 
 ## Current session log
 | Date | Stage | Approval | Changes | Tests | Commit / push | Next action |
@@ -215,4 +215,17 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 | 2026-11-17 | 2 | Explicit continuation after successful initial push | Eight validation/test/evidence/documentation files; no application behavior changes | Java six counts/twelve scenarios pass; API six pairs and 21 invalid inputs pass; state 6 pass; browser six-camera case pass | 37fd6d79b7ad8ceeb655ee1ef0bee6aed3b4e268 / origin main verified after user approval | Started authorized Stage 3 |
 | 2026-11-17 | 3 | Explicit yes to Stage 2 publication and Stage 3 | Experiment runner, analysis/tests, raw evidence/CSV/chart and report; model preserved | 60 measured + 2 warm-up scenarios passed; 30 matched pairs; 6 reference tests; 96-summary audit; plot inspected | 6285c9a8ee5a866d98f5fdcb24abc7eb9b0f8fa1 / origin main verified | Started authorized Stage 4; latency-unit correction remains required |
 | 2026-11-17 | 4 | Explicit yah to Stage 3 publication and Stage 4; go on continued active work | Multi-recording batch API/UI, independent-source Java integration, recovery/partial failures, tests/docs/evidence | Original API pass; Python 23 pass; frontend 11 pass; batch/controlled Java/restart/resource/browser checks pass; standalone matrix pass | cc7d18fb31d3e53598be2a6db097bbb6417379a4 / origin main verified | Started authorized Stage 5 feasibility study |
-| 2026-11-17 | 5 | Explicit feasibility-only requirements: no camera, 1-10 at 1080p/15 FPS, LAN/RTSP; no implementation | Feasibility plan, local readiness evidence and tracker only | Local FFmpeg fixture open/read and capability checks pass; arithmetic/links pass; no network-camera tests | Stage 5 publication pending review | Approve study publication and Stage 6 separately; live implementation remains unapproved |
+| 2026-11-17 | 5 | Explicit feasibility-only requirements: no camera, 1-10 at 1080p/15 FPS, LAN/RTSP; no implementation | Feasibility plan, local readiness evidence and tracker only | Local FFmpeg fixture open/read and capability checks pass; arithmetic/links pass; no network-camera tests | 564f5a4 / origin main verified after approval | Stage 6 approved; obtain selected paper; live implementation remains unapproved |
+| 2026-11-17 | 6 | Approved continuation; selected full PDF supplied | Paper alignment, references and tracker; no runtime changes | Six pages, figures/tables, links/arithmetic/source checks passed | Local review; publication pending | Approve publication and Stage 7 plan |
+
+## Stage 6 - selected reference-paper alignment
+- Approval: user approved Stage 6 after Stage 5 publication, requested continuation, and supplied the complete selected PDF on 2026-11-17. Stage 5 is published as 564f5a4 with origin/main verified.
+- Status/objective: completed locally. Selected paper: Likhit Yammanuru, P. Venkatadri Reddy, Nikhil Tom Jose and Shinu M Rajagopal, Real-Time Video Analytics at the Edge: Enabling Low-Latency and Scalable Solutions, ICCCNP 2025, DOI 10.1109/ICCCNP63914.2025.11233420. Previous 2019 candidate retained only for provenance.
+- Tasks completed: extracted all six pages, visually inspected every rendered page including five figures/three VM tables, recorded source SHA-256, reviewed methodology/results/conclusion, compared detector/profile/topology/placement/metrics and earlier verified evidence, and documented supported contributions/gaps with page references.
+- Files changed: research/PAPER_ALIGNMENT.md, research/REFERENCE_NOTES.md, this tracker. No application, dependency, model, workflow, parameter or historical-result changes. PDF/full-text extracts not copied into Git; rendered pages remain outside repository.
+- Findings: paper reverses Config-1a/1b meanings between methodology and results; Fig. 5 omits Config-2 named in its 65% claim; Fig. 3 is a detection example despite its architecture caption. Conclusion limits work to simulation, leaving physical devices/live streams/power profiling for future work. Numeric benefits remain attributed paper claims, not reproduced project results.
+- Alignment: project implements local YOLO26n/ByteTrack, finite report-derived workloads and fixed cloud/edge mappings, rather than YOLOv8n optimization or adaptive priority scheduling. Multiple recordings and matched retained experiments are project extensions, not evidence of novel algorithms or superiority. Worse project full-loop/energy outcomes remain visible.
+- Checks/results: all six pages text-reviewed and visually inspected; 24 relative links in research files resolve; 310-to-78 arithmetic checked as 74.84%; illustrative 225/290 chart estimate implies about 22.41%, not a precise chart measurement. Source module names, local detector/profile and Stage 3 evidence cross-checked. Whitespace/scope checks passed; historical cloud/edge hashes unchanged. Initial page-6 console encoding failure resolved by UTF-8 extraction. No application tests rerun for docs only; browser not applicable.
+- Limits: supplied PDF lacks complete numerical model/code/optimized weights/repeat design; no exact replication or cross-paper speedup possible. Bibliography checked against PDF/metadata, not independently against publisher. Legacy latency-unit issue unresolved; no new hardware/live/accuracy/performance benchmark. Document content treated as evidence, not instructions.
+- Git review: three docs prepared for review; proposed message Align EdgeVision with the selected edge video analytics paper. No Stage 6 commit/push before approval. Stage 7 remains unapproved and has not started.
+- Remaining work: approve publication and a concrete Stage 7 evaluation plan including latency-unit compatibility, datasets/profiles, repetitions, sensitivity and measurement boundaries. Live implementation remains outside scope.
