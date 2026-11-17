@@ -5,8 +5,8 @@
 - Repository: https://github.com/vishol21/EdgeVision.git
 - Workspace: EdgeVision project root (absolute local path omitted from version control).
 - Current branch: main.
-- Current stage: Stage 2 commit/push approved; Stage 3 approved to start after publication.
-- Overall progress: audit, Stage 1 and Git publication complete; Stage 2 matrix verified at all six required counts.
+- Current stage: Stage 3 commit/push approved; Stage 4 approved to start after publication.
+- Overall progress: audit and Stages 1-2 published; Stage 3 repeated experiments verified and documented.
 - Authority: user handover received 2026-11-17 explicitly directs Stage 0 first and requires approval for each subsequent stage.
 
 ## Stage table
@@ -15,8 +15,8 @@
 | 0 | Audit architecture, baseline and Git | Completed | Explicit first-action instruction |
 | 1 | Fix stale standalone state and result association | Completed | User approved with “yes” after Stage 1 plan |
 | 2 | Validate actual 1-10 camera workloads | Completed | Explicit user request to continue after GitHub push |
-| 3 | Repeatable multi-camera experiments | Not started | User approved Stage 2 commit/push and Stage 3 with yes |
-| 4 | Multiple uploaded CCTV videos | Not started | Not received |
+| 3 | Repeatable multi-camera experiments | Completed | User approved with yes after Stage 2 commit/push and Stage 3 questions |
+| 4 | Multiple uploaded CCTV videos | Not started | User approved Stage 3 publication and Stage 4 with yah |
 | 5 | Investigate live CCTV/IP camera integration | Not started | Not received |
 | 6 | Align implementation with selected research paper | Not started | Not received |
 | 7 | Performance evaluation | Not started | Not received |
@@ -125,7 +125,7 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 
 ## Stage 2 — virtual-camera simulation validation
 - Approval: user requested continuing with the next stage after making the folder Git-ready and pushing. Stage 2 started only after commit `687be247968f4e0c5472fc32068e3cdda76e5d76` was verified on origin/main.
-- Status/objective: validation completed locally for actual source construction, finite emissions, paired workload identity and UI response ordering at 1, 2, 3, 5, 6 and 10 cameras. User approved Stage 2 commit/push and Stage 3 with yes; Stage 3 not started at this commit.
+- Status/objective: validation completed locally for actual source construction, finite emissions, paired workload identity and UI response ordering at 1, 2, 3, 5, 6 and 10 cameras. User approved Stage 2 commit/push and Stage 3 with yes; Stage 2 published as 37fd6d79b7ad8ceeb655ee1ef0bee6aed3b4e268, verified against origin/main before Stage 3 started.
 - Tasks completed: inspected the production source factory and scheduling; added test-only Java factory/trace validation, a PowerShell runner, a real API matrix, reproducible instructions and reviewed JSON evidence. No application source or workload assumptions changed.
 - Files changed: `frontend/test-camera-workloads.js`, `simulation/tests/CameraWorkloadValidation.java`, `simulation/validate-cameras.ps1`, `simulation/validation/STAGE2_VALIDATION.md`, `simulation/validation/stage2-simulator.json`, `simulation/validation/stage2-api.json`, `simulation/README.md`, this tracker.
 - Tests executed/results:
@@ -136,8 +136,27 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 - Browser verification: passed on isolated port 4175. Fresh page neutral; selected 6 cameras/900 expected tuples; observed Running with an empty results table; then Complete and 900 processed tuples in each scenario. Local screenshot: `stage2-six-cameras.jpg` outside Git. API matrix and browser used a copy of production commit 687be24; no production changes occurred in Stage 2.
 - Known limitations: emission trace lacks explicit per-emission source IDs; timing phases are inferred from the staggered schedule, while actual sensor identities are verified separately. Synthetic simulator checks do not measure hardware or establish video detection accuracy. No performance significance/repeatability claim made; Stage 3 remains separate. Existing viewport/text issues remain Stage 8 scope.
 - Historical data: original project cloud/edge SHA-256 hashes still match the Stage 1 backups; no historical files deleted. The matrix restored its isolated standalone outputs after completion. Generated validation reports remain in ignored results/validation; selected small evidence copies are intentionally staged under simulation/validation. No new video job in the original project.
-- Git review: prepared eight Stage 2 files for review; proposed commit message `Validate virtual-camera workloads across six camera counts`. User approval received for this reviewed Stage 2 commit and push; publication will be verified before Stage 3. Initial source commit 687be24 is already pushed and its source files were verified through the GitHub API.
-- Remaining tasks: approve committing/pushing the reviewed Stage 2 change set; separately approve Stage 3 multi-camera experiments and analysis. No unresolved Stage 2 failure found in executed checks.
+- Git review: prepared eight Stage 2 files for review; proposed commit message `Validate virtual-camera workloads across six camera counts`. Stage 2 commit 37fd6d79b7ad8ceeb655ee1ef0bee6aed3b4e268 pushed to origin/main and remote hash verified before Stage 3. Initial source commit 687be24 is already pushed and its source files were verified through the GitHub API.
+- Remaining Stage 2 publication/Stage 3 approvals were received and executed; Stage 2 is verified on origin/main. No unresolved Stage 2 failure found in executed checks.
+
+## Stage 3 — repeated synthetic camera experiments and analysis
+- Approval: user answered yes to committing/pushing Stage 2 and moving to Stage 3. Published Stage 2 as `37fd6d79b7ad8ceeb655ee1ef0bee6aed3b4e268` and verified local/remote main hashes before starting this stage.
+- Status/objective: completed locally; repeatable cloud/edge comparisons at 1, 2, 3, 5, 6 and 10 cameras. Stage 3 commit/push awaits review; Stage 4 not authorized.
+- Tasks completed: added a fresh-JVM experiment runner, validated analysis/CSV/chart generation, reference/failure-path tests, preserved raw results, and an academic report with assumptions and limitations. No application source, workload assumptions, API or dashboard behavior changed.
+- Files changed: `simulation/experiments/run_experiments.py`, `analyze_experiments.py`, `test_experiments.py`, `STAGE3_ANALYSIS.md`, four reviewed files under `simulation/experiments/evidence/2026-11-17/` (raw.json, summary.json, summary.csv, overview.png), `simulation/README.md`, this tracker.
+- Design: five measured repetitions per camera count/placement (60 measured scenario runs), plus one excluded five-camera warm-up pair. One fixed deterministic profile per count across repetitions; profile shared by each paired cloud/edge run. Alternating scenario order, rotating camera-count order. Fresh JVM per scenario; warm-up only affects OS/file caches, not shared JIT state. Existing 100 ms nominal interval, 15 s arrival window, 150 tuples/camera and 2,000-unit simulation horizon preserved.
+- Tests/results:
+  - Production Java compilation and 62 scenario invocations passed. All 30 measured pairs passed exact workload/source identity, configuration, complete tuple-arrival count and horizon validation.
+  - `python -m unittest discover -s simulation/experiments -p test_experiments.py -v` using the project venv: 6 passed. Checks reference mean/sample standard deviation, non-finite input, incomplete/failed evidence, exact profile identity, missing processing, warm-up exclusion, signed comparisons and duplicate repetition rejection.
+  - Independent audit verified all 96 camera/scenario/metric summaries against raw values and checked source/data SHA-256 hashes. Figure visually inspected; labels/legend/table data verified. Unit labels explicit in report, figure and CSV.
+  - Modeled latency, payload traffic, energy and tuple counts exactly repeated across all five repetitions at each configuration. Wall-clock runtime varied; min/max and sample deviation retained. No statistical-significance claim.
+- Key findings: edge detector-arrival latency 62.55–69.31% lower and counted payload traffic 48.75% lower; full application-loop latency 17.72–49.68% higher. Modeled energy is 0.502% higher at two cameras and 9.405% lower at ten cameras; not monotonic in every interval. At ten cameras, Java-measured runtime means: cloud 307.0 ms, edge 616.6 ms. This is local simulator runtime, not video-processing time or physical edge execution time.
+- Unit finding requiring an approved correction: legacy `loopLatencyMs`/`analyticsLatencyMs` values are raw CloudSim clock averages with no milliseconds conversion. Existing dashboard labels remain misleading under the declared seconds-based workload. Stage 3 reports raw simulator time units and preserves the original exported keys/values; no hardware calibration or silent parameter reinterpretation. Fix the unit contract/UI before final academic presentation.
+- Additional metric limits: detector latency ends at Event_Detector arrival and excludes its compute time; processed counter observes arrivals at cloud storage, not confirmed storage execution. Energy aggregates configured device counters over a fixed horizon; the small-load energy regression and non-monotonic steps need per-device utilization/accounting investigation before causal claims. Report explains topology-consistent delay trade-offs without isolated causal attribution.
+- Browser verification: not rerun because no UI/production changes; Stage 2 browser checks remain the latest. Scientific chart inspected locally instead. No web research or paper-alignment claim made.
+- Data protection: ignored generated run evidence is under results/experiments/stage3-2026-11-17; intentional reviewed copies total about 447 KB. Original cloud/edge files still match prior SHA-256 hashes; no historical output/profile deletion and no new video job.
+- Git review: ten Stage 3 files prepared for review. Proposed message: `Add repeatable cloud-edge experiments and honest metric analysis`. User approved Stage 3 commit/push with yah; publication will be verified before Stage 4. Stage 2 commit/push already verified.
+- Remaining tasks: approve Stage 3 commit/push; separately approve Stage 4 multiple actual video inputs. Resolve the documented latency-unit contract in a separately approved change before final reporting; investigate energy attribution if stronger conclusions are required. No experiment execution or validation test failed.
 
 ## Current session log
 | Date | Stage | Approval | Changes | Tests | Commit / push | Next action |
@@ -145,4 +164,5 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 | 2026-11-17 | 0 / G0 inspection | Explicit handover first action | Tracker only; build/test artifacts as disclosed above | Python 23 pass; JS syntax pass; Java build pass; API suite fails paired standalone identity; restart recovery pass; browser not performed | None / not attempted | Await Stage 1 approval; preserve baseline and historical data |
 | 2026-11-17 | 1 | Explicit “yes” to Stage 1 | Seven authored files; stale-state fix, common paired workload ID, explicit video/standalone switch and regression tests | State 6 pass; full API suite pass; syntax pass; browser pass; restart recovery pass | None / not attempted; root Git setup and commit review pending | Await Git setup review and Stage 2 approval |
 | 2026-11-17 | G1-G4 | Explicit request to make Git-ready and push first | Root Git setup, submodule pin, exclusions, portable setup docs and clean-checkout API tests | Export: Java build pass; Python 23 pass; state 6 pass; full API pass | 687be247968f4e0c5472fc32068e3cdda76e5d76 / origin main verified | Started authorized Stage 2 only after push |
-| 2026-11-17 | 2 | Explicit continuation after successful initial push | Eight validation/test/evidence/documentation files; no application behavior changes | Java six counts/twelve scenarios pass; API six pairs and 21 invalid inputs pass; state 6 pass; browser six-camera case pass | Stage 2 commit/push awaiting review | Request Stage 2 commit approval and Stage 3 approval |
+| 2026-11-17 | 2 | Explicit continuation after successful initial push | Eight validation/test/evidence/documentation files; no application behavior changes | Java six counts/twelve scenarios pass; API six pairs and 21 invalid inputs pass; state 6 pass; browser six-camera case pass | 37fd6d79b7ad8ceeb655ee1ef0bee6aed3b4e268 / origin main verified after user approval | Started authorized Stage 3 |
+| 2026-11-17 | 3 | Explicit yes to Stage 2 publication and Stage 3 | Experiment runner, analysis/tests, raw evidence/CSV/chart and report; model preserved | 60 measured + 2 warm-up scenarios passed; 30 matched pairs; 6 reference tests; 96-summary audit; plot inspected | Stage 3 commit/push pending review | Approve Stage 3 publication and Stage 4 separately; latency-unit correction remains required |
