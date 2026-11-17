@@ -47,7 +47,7 @@ function result(scenario, count = 5, id = 'a'.repeat(32)) {
   };
 }
 
-function harness(handler = async () => response({ status: 'ok' })) {
+function harness(handler = async () => response({ status: 'ok' }), { chartsAvailable = true, reducedMotion = false } = {}) {
   const nodes = new Map();
   const get = selector => {
     if (!nodes.has(selector)) nodes.set(selector, new Element());
@@ -62,13 +62,13 @@ function harness(handler = async () => response({ status: 'ok' })) {
   const calls = [];
   const charts = [];
   class Chart {
-    constructor(canvas, config) { this.data = config.data; charts.push(this); }
+    constructor(canvas, config) { this.data = config.data; this.options = config.options; charts.push(this); }
     update() {}
   }
   const context = {
     document: { querySelector: get, querySelectorAll: selector => selector === '[data-run]' ? buttons : [],
       createElement: () => new Element(), createTextNode: text => ({ textContent: text }) },
-    window: { Chart }, Chart,
+    window: { Chart: chartsAvailable ? Chart : undefined, matchMedia: () => ({ matches: reducedMotion }) }, Chart,
     fetch: async (url, options) => {
       calls.push(url);
       if (url === '/api/video/batches/config') return response({ maxCameras: 10, maxFileBytes: 524288000, maxTotalBytes: 1073741824, maxCombinedTuples: 100000 });
@@ -97,6 +97,34 @@ test('fresh page and refresh never request historical results; controls are neut
     assert.deepEqual(ui.calls, ['/api/health', '/api/video/batches/config']);
     ui.buttons.forEach(button => assert.equal(button.attributes['aria-pressed'], 'false'));
   }
+});
+
+test('raw simulator values retain units across cards, table, chart axes and tooltips', async () => {
+  const ui = harness(async url => url.endsWith('/health') ? response({ status: 'ok' }) : response(result('edge')), { reducedMotion: true });
+  await ui.run('edge');
+  assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '12');
+  assert.equal(ui.get('[data-metric="latency"]').children[1].textContent, 'sim units');
+  assert.equal(ui.get('[data-metric="analyticsLatency"]').children[1].textContent, 'sim units');
+  assert.equal(ui.get('[data-metric="runtime"]').children[1].textContent, 'ms');
+  assert.equal(ui.get('#results-table-body').children[1].children[2].textContent, '12');
+  assert.match(ui.get('#metric-context').textContent, /Edge-based/);
+  assert.equal(ui.charts[0].data.datasets[0].data[1], 12);
+  assert.equal(ui.charts[0].options.scales.y.title.text, 'sim units');
+  assert.equal(ui.charts[0].options.plugins.tooltip.callbacks.label({ parsed: { y: 12 } }), 'Full-loop latency: 12 sim units');
+  assert.equal(ui.charts[0].options.animation, false);
+});
+
+test('missing chart library leaves cards, table and controls working with a visible notice', async () => {
+  const ui = harness(async url => url.endsWith('/health') ? response({ status: 'ok' }) : response(result('cloud')), { chartsAvailable: false });
+  await ui.run('cloud');
+  assert.equal(ui.get('#chart-status').hidden, false);
+  assert.match(ui.get('#chart-status').textContent, /results table remain available/);
+  assert.equal(ui.get('.chart-grid').hidden, true);
+  assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '12');
+  assert.equal(ui.get('#results-table-body').children[0].children[2].textContent, '12');
+  assert.equal(ui.get('#run-status').textContent, 'Complete');
+  assert.equal(ui.buttons[0].disabled, false);
+  ui.get('#camera-count').value = '6'; ui.get('#camera-count').emit('input'); ui.empty();
 });
 
 test('a new run clears cards/charts/table; camera changes clear results and selection', async () => {
@@ -130,6 +158,27 @@ test('failed runs leave an empty Failed state without fetching saved results', a
   assert.equal(ui.get('#run-status').textContent, 'Failed');
   assert.equal(ui.get('#run-feedback').textContent, 'Run failed');
   assert.ok(!ui.calls.includes('/api/results'));
+});
+
+test('decoder errors show an actionable retry message while unrelated video errors remain intact', async () => {
+  for (const message of ['OpenCV assertion at decoder; could not decode', 'Model weights are unavailable.']) {
+    const ui = harness(async url => {
+      if (url.endsWith('/health')) return response({ status: 'ok' });
+      if (url.endsWith('/upload')) return response({ jobId: 'a'.repeat(32) });
+      if (url.endsWith('/analyze')) return response({});
+      return response({ status: 'failed', analysisStatus: 'failed', analysisError: message });
+    });
+    ui.get('#video-file').files = [{ name: 'corrupt.avi', size: 100 }];
+    ui.get('#video-file').emit('change');
+    await ui.get('#analyze-button').emit('click');
+    assert.equal(ui.get('#video-error').hidden, false);
+    assert.equal(ui.get('#run-status').textContent, 'Failed');
+    assert.equal(ui.get('#analyze-button').disabled, false);
+    if (message.startsWith('OpenCV')) {
+      assert.match(ui.get('#video-error').textContent, /re-encode/);
+      assert.doesNotMatch(ui.get('#video-error').textContent, /assertion/);
+    } else assert.equal(ui.get('#video-error').textContent, message);
+  }
 });
 
 test('mismatched pair or wrong camera count publishes neither scenario', async () => {

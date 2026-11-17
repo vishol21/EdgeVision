@@ -89,9 +89,13 @@
       energy: result?.metrics.energyJoules,
       runtime: result?.metrics.wallClockMillis
     };
+    document.querySelector('#metric-context').textContent = result
+      ? `Summary: ${state.latestScenario === 'cloud' ? 'Cloud-only' : 'Edge-based'} scenario. The table and charts compare available scenarios.`
+      : 'Summary values appear after a scenario completes.';
+    const units = { latency: 'sim units', analyticsLatency: 'sim units', networkUsage: 'MB', energy: 'J', runtime: 'ms' };
     for (const [key, value] of Object.entries(values)) {
       const target = document.querySelector(`[data-metric="${key}"]`);
-      const unit = target.querySelector('small')?.textContent ?? '';
+      const unit = units[key];
       target.replaceChildren(document.createTextNode(format(value)));
       const suffix = document.createElement('small');
       suffix.textContent = unit;
@@ -165,14 +169,20 @@
   }
 
   function renderCharts() {
-    if (!window.Chart) return;
+    const unavailable = !window.Chart;
+    const notice = document.querySelector('#chart-status');
+    notice.hidden = !unavailable;
+    notice.textContent = unavailable ? 'Charts could not load. Metric cards and the results table remain available. Reload to try loading charts again.' : '';
+    document.querySelector('.chart-grid').hidden = unavailable;
+    if (unavailable) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const definitions = [
-      ['latency', 'loopLatencyMs', '#83a9ff'],
-      ['analytics-latency', 'analyticsLatencyMs', '#b2bfd2'],
-      ['network', 'networkUsageMb', '#63c9c1'],
-      ['energy', 'energyJoules', '#b2bfd2']
+      ['latency', 'loopLatencyMs', '#83a9ff', 'Full-loop latency', 'sim units'],
+      ['analytics-latency', 'analyticsLatencyMs', '#b2bfd2', 'Detector arrival', 'sim units'],
+      ['network', 'networkUsageMb', '#63c9c1', 'Modeled payload traffic', 'MB'],
+      ['energy', 'energyJoules', '#b2bfd2', 'Modeled device energy', 'J']
     ];
-    for (const [chartId, metric, color] of definitions) {
+    for (const [chartId, metric, color, label, unit] of definitions) {
       const canvas = document.querySelector(`#${chartId}-chart`);
       const data = [state.results.cloud?.metrics[metric] ?? null, state.results.edge?.metrics[metric] ?? null];
       if (state.charts[chartId]) {
@@ -184,15 +194,18 @@
         type: 'bar',
         data: {
           labels: ['Cloud-only', 'Edge-based'],
-          datasets: [{ data, backgroundColor: [`${color}70`, `${color}c0`], borderColor: color, borderWidth: 1, borderRadius: 3, barThickness: 22 }]
+          datasets: [{ label, data, backgroundColor: [`${color}70`, `${color}c0`], borderColor: color, borderWidth: 1, borderRadius: 3, barThickness: 22 }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          animation: reducedMotion ? false : { duration: 250 },
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: context => `${label}: ${format(context.parsed.y)} ${unit}`
+          } } },
           scales: {
-            x: { grid: { display: false }, ticks: { color: '#9aa9bc', font: { size: 9 } }, border: { color: '#26364c' } },
-            y: { beginAtZero: true, grid: { color: '#26364c' }, ticks: { color: '#6f8096', font: { size: 8 } }, border: { display: false } }
+            x: { grid: { display: false }, ticks: { color: '#9aa9bc', font: { size: 12 } }, border: { color: '#26364c' } },
+            y: { beginAtZero: true, title: { display: true, text: unit, color: '#9aa9bc', font: { size: 12 } }, grid: { color: '#26364c' }, ticks: { color: '#9aa9bc', font: { size: 12 } }, border: { display: false } }
           }
         }
       });
@@ -351,6 +364,12 @@
     row.append(cell);
   }
 
+  function readableVideoError(message) {
+    return /opencv|could not decode/i.test(String(message))
+      ? 'This recording could not be decoded. Try another supported video or re-encode the recording.'
+      : message;
+  }
+
   function renderBatch(batch = null) {
     const table = document.querySelector('#batch-camera-table');
     table.replaceChildren();
@@ -360,7 +379,7 @@
       addCell(row, `${camera.filename} · ${camera.cameraId}`);
       const label = { selected: 'Selected', awaiting_upload: 'Waiting for upload', uploading: 'Uploading', uploaded: 'Uploaded',
         processing: 'Analyzing', completed: 'Analyzed', upload_failed: 'Upload rejected', analysis_failed: 'Analysis failed', interrupted: 'Interrupted' }[camera.status] || 'Unavailable';
-      addCell(row, camera.error ? `${label}: ${camera.error}` : label);
+      addCell(row, camera.error ? `${label}: ${readableVideoError(camera.error)}` : label);
       const action = document.createElement('td');
       if (camera.status === 'completed') {
         const button = document.createElement('button');
@@ -624,7 +643,7 @@
       });
       await pollVideoJob(uploaded.jobId);
     } catch (error) {
-      videoError.textContent = error.message || 'Video analysis failed.';
+      videoError.textContent = readableVideoError(error.message) || 'Video analysis failed.';
       videoError.hidden = false;
       videoStatus.textContent = 'Analysis did not complete.';
       videoProgress.hidden = true;

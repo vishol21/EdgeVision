@@ -67,11 +67,11 @@
           <div class="analytics-breakdown">
             <div class="panel">
               <div class="panel-heading"><h3>Vehicle detections</h3><span>Tracked observations · unique IDs</span></div>
-              <div class="table-scroll"><table><thead><tr><th>Class</th><th>Observations</th><th>Unique IDs</th></tr></thead><tbody id="vehicle-table"></tbody></table></div>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Class</th><th>Observations</th><th>Unique IDs</th></tr></thead><tbody id="vehicle-table"></tbody></table></div>
             </div>
             <div class="panel">
               <div class="panel-heading"><h3>Tracked objects</h3><span>IDs reported by ByteTrack</span></div>
-              <div class="table-scroll"><table><thead><tr><th>Track ID</th><th>Class</th><th>First seen (s)</th><th>Last seen (s)</th></tr></thead><tbody id="tracking-table"></tbody></table></div>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Track ID</th><th>Class</th><th>First seen (s)</th><th>Last seen (s)</th></tr></thead><tbody id="tracking-table"></tbody></table></div>
             </div>
           </div>
           <div class="panel event-panel"><div class="panel-heading"><h3>Unusual activity events</h3><span>Configured rules only</span></div><div id="event-list" class="event-list"></div></div>
@@ -86,7 +86,7 @@
           <p id="batch-error" class="video-error" role="alert" hidden></p>
           <p id="batch-summary" class="simulation-note"></p>
           <div class="batch-recovery"><label for="batch-recovery-id">Recover a recording batch by ID</label><input id="batch-recovery-id" type="text" maxlength="32" placeholder="32-character batch ID" autocomplete="off"><button id="recover-batch-button" class="button" type="button">Load batch comparison</button></div>
-          <div class="table-scroll"><table><thead><tr><th>Camera / recording</th><th>Status</th><th>Analytics</th></tr></thead><tbody id="batch-camera-table"><tr><td colspan="3">No camera recordings selected.</td></tr></tbody></table></div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Camera / recording</th><th>Status</th><th>Analytics</th></tr></thead><tbody id="batch-camera-table"><tr><td colspan="3">No camera recordings selected.</td></tr></tbody></table></div>
         </div>
       </section>
 
@@ -105,22 +105,24 @@
           <div class="run-feedback" id="run-feedback" role="status" aria-live="polite">Ready. No simulation results yet.</div>
           <div class="progress-track" id="progress-track" hidden><span></span></div>
         </div>
+        <p id="metric-context" class="simulation-note" role="status">Summary values appear after a scenario completes.</p>
+        <p id="metric-semantics" class="simulation-note">Latency uses raw simulator time units. Full loop ends when a result arrives at cloud storage; detector arrival ends before event-detector processing. Traffic and energy are modeled; processed tuples count arrivals at storage. Simulator wall-clock runtime is separate from video-processing duration.</p>
         <div class="result-summary">
-          <article class="result-card"><span>APPLICATION LATENCY</span><strong data-metric="latency">— <small>ms</small></strong></article>
-          <article class="result-card"><span>ANALYTICS LATENCY</span><strong data-metric="analyticsLatency">— <small>ms</small></strong></article>
-          <article class="result-card"><span>NETWORK USAGE</span><strong data-metric="networkUsage">— <small>MB</small></strong></article>
-          <article class="result-card"><span>ENERGY CONSUMPTION</span><strong data-metric="energy">— <small>J</small></strong></article>
+          <article class="result-card"><span>FULL-LOOP LATENCY</span><strong data-metric="latency">— <small>sim units</small></strong></article>
+          <article class="result-card"><span>DETECTOR-ARRIVAL LATENCY</span><strong data-metric="analyticsLatency">— <small>sim units</small></strong></article>
+          <article class="result-card"><span>MODELED PAYLOAD TRAFFIC</span><strong data-metric="networkUsage">— <small>MB</small></strong></article>
+          <article class="result-card"><span>MODELED DEVICE ENERGY</span><strong data-metric="energy">— <small>J</small></strong></article>
           <article class="result-card"><span>SIMULATION RUN TIME (WALL CLOCK)</span><strong data-metric="runtime">— <small>ms</small></strong></article>
         </div>
         <div class="results-layout">
-          <div class="panel chart-panel"><div class="panel-heading"><h3>Scenario comparison</h3><span>Cloud-only vs edge-based</span></div><div class="chart-grid">
-            <div class="chart-box"><span>Latency <small>ms</small></span><div class="chart-area"><canvas id="latency-chart" aria-label="Application latency comparison"></canvas></div></div>
-            <div class="chart-box"><span>Analytics latency <small>ms</small></span><div class="chart-area"><canvas id="analytics-latency-chart" aria-label="Analytics latency comparison"></canvas></div></div>
-            <div class="chart-box"><span>Network usage <small>MB</small></span><div class="chart-area"><canvas id="network-chart" aria-label="Network usage comparison"></canvas></div></div>
-            <div class="chart-box"><span>Energy <small>J</small></span><div class="chart-area"><canvas id="energy-chart" aria-label="Energy consumption comparison"></canvas></div></div>
+          <div class="panel chart-panel"><div class="panel-heading"><h3>Scenario comparison</h3><span>Cloud-only vs edge-based</span></div><p id="chart-status" class="simulation-note" role="status" hidden></p><div class="chart-grid">
+            <div class="chart-box"><span>Full-loop latency <small>sim units</small></span><div class="chart-area"><canvas id="latency-chart" role="img" aria-label="Full-loop latency comparison in simulator time units" aria-describedby="metric-semantics"></canvas></div></div>
+            <div class="chart-box"><span>Detector arrival <small>sim units</small></span><div class="chart-area"><canvas id="analytics-latency-chart" role="img" aria-label="Detector-arrival latency comparison in simulator time units" aria-describedby="metric-semantics"></canvas></div></div>
+            <div class="chart-box"><span>Network usage <small>MB</small></span><div class="chart-area"><canvas id="network-chart" role="img" aria-label="Modeled payload traffic comparison in decimal megabytes"></canvas></div></div>
+            <div class="chart-box"><span>Energy <small>J</small></span><div class="chart-area"><canvas id="energy-chart" role="img" aria-label="Modeled device energy comparison in joules"></canvas></div></div>
           </div></div>
-          <div class="panel table-panel"><div class="panel-heading"><h3>Results table</h3></div><div class="table-scroll"><table>
-            <thead><tr><th>Scenario</th><th>Status</th><th>Loop latency (ms)</th><th>Analytics latency (ms)</th><th>Network (MB)</th><th>Energy (J)</th><th>Processed tuples</th><th>Run time (wall ms)</th></tr></thead>
+          <div class="panel table-panel"><div class="panel-heading"><h3>Results table</h3></div><div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table>
+            <thead><tr><th>Scenario</th><th>Status</th><th>Full loop (sim units)</th><th>Detector arrival (sim units)</th><th>Payload (MB)</th><th>Model energy (J)</th><th>Tuple arrivals</th><th>Run time (wall ms)</th></tr></thead>
             <tbody id="results-table-body"><tr><td class="empty-state" colspan="8">No simulation results yet</td></tr></tbody>
           </table></div></div>
         </div>

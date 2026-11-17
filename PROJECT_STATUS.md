@@ -5,8 +5,8 @@
 - Repository: https://github.com/vishol21/EdgeVision.git
 - Workspace: EdgeVision project root (absolute local path omitted from version control).
 - Current branch: main.
-- Current stage: Stage 7 performance evaluation completed locally; publication review pending; Stage 8 awaiting approval; no live implementation authorized.
-- Overall progress: audit and Stages 1-6 published; Stage 7 eleven-case evaluation completed with retained evidence and documented trade-offs.
+- Current stage: Stage 8 dashboard/system quality completed locally; publication review pending; Stage 9 awaiting approval; no live implementation authorized.
+- Overall progress: audit and Stages 1-7 published; Stage 8 unit presentation and scoped quality fixes implemented and verified.
 - Authority: user handover received 2026-11-17 explicitly directs Stage 0 first and requires approval for each subsequent stage.
 
 ## Stage table
@@ -20,7 +20,7 @@
 | 5 | Investigate live CCTV/IP camera integration | Completed | User approved feasibility only; explicitly no hardware assumed and no live implementation |
 | 6 | Align implementation with selected research paper | Completed | User approved continuation and supplied the selected full paper |
 | 7 | Performance evaluation | Completed | User approved concrete plan with ok; go on continued active work |
-| 8 | Dashboard and system quality | Not started | Not received |
+| 8 | Dashboard and system quality | Completed | User approved concrete plan with yes |
 | 9 | Final documentation and presentation | Not started | Not received |
 | G0 | Inspect local and remote Git state | Completed | Read-only Stage 0 inspection |
 | G1 | Prepare exclusions and review large/private files | Completed | Explicit user request to prepare Git and push first |
@@ -253,8 +253,36 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 - Preservation/browser: no application source/config change; original standalone cloud/edge SHA-256 hashes match prior baseline. No historical job/profile deletion. Browser not applicable because no runtime/UI change; original application suites not unnecessarily rerun. Local evaluation processes ended; no service/camera connection started.
 - Limits: two 160x120 moving-shape clips, not labeled CCTV or 1080p live inputs; no accuracy, real-time capacity, physical energy, hardware calibration, sensitivity sweep or causal energy attribution. Default regions empty, so no region-rule evaluation or safety claim. Pipeline measurements and model-derived demand assumptions remain distinct.
 - Files changed: evaluator/tests/report, six reviewed evidence files, research/STAGE7_EVALUATION_PLAN.md, simulation/README.md and this tracker (12 files total).
-- Git: changes prepared for review; proposed commit Evaluate synthetic and recording-derived cloud-edge workloads. Commit/push pending user approval. Next: approve publication and the concrete Stage 8 dashboard-quality/unit-compatibility plan before implementation.
+- Git: changes prepared for review; proposed commit Evaluate synthetic and recording-derived cloud-edge workloads. Published after user approval as 3aba133c908933aa3af9a4df7292ee28d0b2a7b1; origin/main verified. Stage 8 concrete plan prepared before implementation.
 
 | Date | Stage | Approval | Changes | Checks | Commit/push | Next action |
 |---|---|---|---|---|---|---|
 | 2026-11-17 | 7 | Explicit ok to concrete plan; go on continued active work | Evaluator/tests/report and reviewed evidence; no runtime changes | 112 final scenarios, 14 tests, controlled Java, 176-group audit and plot review passed | Local review; publication pending | Approve publication and Stage 8 plan |
+
+
+## Stage 8 - concrete quality plan prepared
+- Approval: user answered yes to publishing Stage 7 and moving to Stage 8. Published Stage 7 as 3aba133c908933aa3af9a4df7292ee28d0b2a7b1; local/remote main hashes match.
+- Inspection: current HTML/CSS/chart rendering and state tests. Confirmed raw simulator latency remains labeled ms across cards/charts/table, very small labels and silent chart-library fallback. Read the applicable UI-quality skill guidance; preserve incumbent design. No runtime/UI edit, browser verification or new application test in this planning pass.
+- Files changed: research/STAGE8_QUALITY_PLAN.md and this tracker only, local for review. Tests: Git whitespace/scope check only; Stage 7 publication verified.
+- Proposed compatibility treatment: relabel unchanged raw clock averages consistently as simulator time units, explain full-loop/detector-arrival endpoints, keep legacy JSON keys and saved values intact. Runtime milliseconds/video duration remain distinct. No historical data migration or simulator assumption change.
+- Proposed quality scope: source-informed legibility/contrast/focus/target/motion fixes, chart-unavailable notice, all existing upload/standalone/batch/error/recovery flows and batched desktop/mobile verification in an isolated copy. Exact tests/risks/files documented in the plan.
+- Remaining action: approve the concrete plan before implementation, per handover Section 6 Rule 3 and Section 10. Stage 9 and live streaming remain unapproved.
+
+
+## Stage 8 - dashboard and system quality completed
+- Approval: user answered yes to the concrete Stage 8 plan. Stage 7 is published as 3aba133c908933aa3af9a4df7292ee28d0b2a7b1 with origin/main verified; Stage 9 remains unapproved.
+- Status/objective: completed locally. Corrected current UI latency labels/endpoints without changing legacy Java/API keys, numerical values, workload assumptions or historical outputs. Full-loop/detector-arrival cards, charts/axes/tooltips/accessibility text and table now use simulator time units; runtime stays wall-clock ms. Summary identifies which scenario is displayed; modeled payload/energy/tuple-arrival semantics are explicit.
+- Quality changes: readable 12px-or-larger inspected labels/ticks, brighter secondary text, 44px controls/navigation, visible focus, locally scrollable keyboard-focusable tables, long-name wrapping, bounded metric columns and reduced-motion static progress/disabled chart animation. Chart library absence shows notice while preserving cards/table/actions. Decode errors give a supported-video/re-encode recovery message; backend diagnostics unchanged. Existing design and technology retained.
+- Browser-discovered corrections: explicit hidden styling prevents button display rules exposing an inactive mode switch; both single/batch mobile action rows avoid a 130px column flex-basis button. Rechecked after correction. No backend root-cause defect found requiring change.
+- Files changed: frontend/index.html, frontend/css/styles.css, frontend/js/app.js, frontend/test-state.js, frontend/STAGE8_VERIFICATION.md, frontend/stage8-verification.json, simulation/README.md, research/STAGE8_QUALITY_PLAN.md and this tracker (nine files).
+- Tests/results: 14 frontend state/profile tests passed; Node syntax/whitespace pass. Full existing API suite passed including real fixture processing, separate simulation failure, paired identity/counts and standalone cloud/edge/both 1/5/10. Batch suite passed full/partial/all-failed/forced simulation failure. Restart checks recovered saved single comparison and both batch reports/associations/range playback. Source snapshots in isolated copy matched changed UI files; original backend/Java/Python/config unchanged.
+- Browser verification: real six-camera/900-tuple pair showed Running then Complete; changing count cleared values. Real single fixture chooser/analysis produced a 20-tuple paired job; explicit standalone/video switching preserved association. Completed two-source/32-tuple batch recovered before/after restart; individual report did not replace comparison. Partial 1/3 and all-failed views showed exclusions/neutral values. Isolated HTML with Chart.js script omitted completed an actual cloud run with visible fallback notice and usable cards/table. Normal final browser logs had no captured warnings/errors.
+- Responsive/keyboard: 1440, 390 and 320px layouts had no document overflow; tables contained scroll. At 390px inspected action buttons were 44px and visible main text at least 12px. 150-character filename contained at 320px. Tab focus, Enter recovery, range keys and horizontal table arrows worked. Additional 980px screenshot saved outside Git as stage8-verified-comparison.jpg; wider capture stage8-desktop-comparison.jpg is right-cropped. Viewport reset and test tabs closed.
+- Design scan: one detector pass; five incumbent uppercase-label tracking warnings, nontextual loading-progress warning and neutral-placeholder dash advisory reviewed in context. Palette contrast calculation for three text colors/four main surfaces minimum 6.746:1. Not a universal accessibility certification; actual OS reduced-motion and 200-percent zoom not toggled. Chart preference branch tested in harness; CSS alternative inspected.
+- Data protection/cleanup: isolated test root under OS temp; original historical cloud/edge hashes unchanged; no historical profiles/results deleted. No camera connection/network scan, new dependency, deployment or model change. Held test script restored; isolated port 4178 server stopped after tests. API suite also ran through after the restart-specific check because its recovery option does not exit early; outcomes passed and no production results touched.
+- Limits: external font/Chart.js CDN dependency remains with chart fallback; native AVI preview can be unavailable although Python decoding works. No physical touchscreen, exhaustive assistive-tech/cross-browser/zoom, load/storage stress, security certification, real CCTV accuracy or hardware performance test. Historical reports retain their recorded legacy-unit warnings; current dashboard correction does not calibrate hardware time.
+- Git review: nine files prepared for review; proposed commit Correct simulator units and improve dashboard accessibility and states. No Stage 8 commit/push before approval. Next stage is final project documentation and presentation, requiring a concrete approved deliverable plan and preserving all simulation/feasibility limitations.
+
+| Date | Stage | Approval | Changes | Checks | Commit/push | Next action |
+|---|---|---|---|---|---|---|
+| 2026-11-17 | 8 | Explicit yes to concrete plan | Unit presentation, scoped UI quality, regression tests and verification docs | 14 frontend tests; full/batch API; restart/browser/keyboard/responsive checks passed | Local review; publication pending | Approve Stage 8 publication and Stage 9 plan |

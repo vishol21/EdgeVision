@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-17",
+  "type": "stage8_dashboard_quality_verification",
+  "sourceBaseline": "3aba133c908933aa3af9a4df7292ee28d0b2a7b1",
+  "canonicalFrontendSourceHashes": {
+    "frontend/index.html": "061ff3acd0c966627cef65bd989bf105b826b6479d635123f19849d519ced6c1",
+    "frontend/css/styles.css": "3167cb1e64bf1e67a13436ad32b8206f9d2377ef61285bde9fec87ca71bb6f7f",
+    "frontend/js/app.js": "b3f0e59b90b75d3c380b57f197737f5e66fa13881a45779028e4fa84551c0fee",
+    "frontend/test-state.js": "0e8a9a9db4e6e646692897093e7baeb73ecfd37930f0a4a77243d0b1cc64255c"
+  },
+  "checks": {
+    "frontendTestsPassed": 14,
+    "fullApiSuite": "passed; also verified single-job recovery after restart",
+    "batchApiSuite": "passed full/partial/all-failed/forced-simulation-failure",
+    "batchRestartRecovery": "passed reports, status associations and byte-range annotated playback",
+    "freshRefresh": "neutral; no historical fetch",
+    "cameraChange": "cleared prior results",
+    "browserStandalone": {
+      "cameraCount": 6,
+      "processedTuplesEach": 900
+    },
+    "browserSingleVideo": {
+      "jobId": "57d2f29912e643258f7bcf90363f257c",
+      "processedTuplesEach": 20
+    },
+    "browserBatch": {
+      "batchId": "9f0261f148dd4e99a6bbab1f5011e1c9",
+      "processedTuplesEach": 32
+    },
+    "chartLibraryMissing": "tested through isolated HTML copy with CDN script removed; actual cloud run completed with cards/table and notice",
+    "keyboard": "Tab focus ring; Enter recovery; arrow-key table scrolling",
+    "longFilename": "150-character filename contained at 320px viewport",
+    "viewports": [
+      1440,
+      980,
+      390,
+      320
+    ],
+    "pageOverflow": "none at tested widths; tables scroll locally",
+    "mobileActionButtonHeightPx": 44,
+    "visibleMainTextBelow12px": 0,
+    "reducedMotion": "chart animation=false tested in DOM harness; CSS static progress and auto scroll inspected; OS preference not toggled"
+  },
+  "textContrastRatios": {
+    "e8eef7/0b1220": 16.052,
+    "e8eef7/111b2b": 14.812,
+    "e8eef7/152135": 13.84,
+    "e8eef7/0e1725": 15.415,
+    "9aa9bc/0b1220": 7.824,
+    "9aa9bc/111b2b": 7.22,
+    "9aa9bc/152135": 6.746,
+    "9aa9bc/0e1725": 7.514,
+    "a0aec0/0b1220": 8.301,
+    "a0aec0/111b2b": 7.66,
+    "a0aec0/152135": 7.157,
+    "a0aec0/0e1725": 7.972
+  },
+  "savedBatchMetrics": {
+    "cloud": {
+      "loopLatencyMs": 120.25835379464286,
+      "analyticsLatencyMs": 118.95026785714286,
+      "networkUsageMb": 1.28,
+      "nativeNetworkUsageIndex": 32000.0,
+      "energyJoules": 3017293.2049999996,
+      "simulationTimeSeconds": 2000.0,
+      "processedTuples": 32,
+      "wallClockMillis": 87
+    },
+    "edge": {
+      "loopLatencyMs": 128.08075892857144,
+      "analyticsLatencyMs": 9.856562500000003,
+      "networkUsageMb": 0.656,
+      "nativeNetworkUsageIndex": 800.0,
+      "energyJoules": 3091967.247911142,
+      "simulationTimeSeconds": 2000.0,
+      "processedTuples": 32,
+      "wallClockMillis": 77
+    }
+  },
+  "compatibility": "Legacy raw latency keys/values preserved; presentation uses simulator time units. Java/API/Python/config unchanged.",
+  "limits": [
+    "Synthetic clips only, no CCTV accuracy or hardware performance validation",
+    "Not a comprehensive accessibility/security certification",
+    "Actual 200-percent browser zoom and OS reduced-motion toggle not tested",
+    "Chart.js and web fonts still use external CDNs"
+  ],
+  "cleanup": {
+    "isolatedServerStopped": true,
+    "browserViewportReset": true,
+    "historicalDataDeleted": false,
+    "cameraConnections": 0
+  }
+}
