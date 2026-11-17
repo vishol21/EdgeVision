@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-17",
+  "type": "documentation_only_live_camera_feasibility",
+  "inspectedCommit": "cc7d18fb31d3e53598be2a6db097bbb6417379a4",
+  "userRequirements": {
+    "physicalCameraOrNvrAvailable": false,
+    "cameraCountRange": [1, 10],
+    "width": 1920,
+    "height": 1080,
+    "sourceFps": 15,
+    "network": "local_network_to_pc",
+    "protocol": "RTSP",
+    "liveImplementationAuthorized": false
+  },
+  "localChecks": {
+    "openCvVersion": "4.14.0",
+    "ffmpegBackendAvailable": true,
+    "openTimeoutConstantPresent": true,
+    "readTimeoutConstantPresent": true,
+    "localFixtureOpenedWithTimeoutParametersMs": [3000, 3000],
+    "localFixtureCaptureBackend": "FFMPEG",
+    "oneLocalFixtureFrameDecoded": true,
+    "torchCudaAvailable": false,
+    "torchCpuThreads": 12,
+    "installedDefaultInferenceImageSize": 640,
+    "totalPhysicalMemoryBytesReportedByWindows": 16794742784,
+    "standaloneFfmpegOnPath": false,
+    "standaloneFfprobeOnPath": false,
+    "cameraConnectionsAttempted": 0,
+    "networkScansPerformed": 0
+  },
+  "planningArithmetic": {
+    "encodedBitrateScenariosMbpsPerCamera": [2, 4, 8],
+    "bitrateScenariosAreMeasured": false,
+    "tenCamerasAt4Mbps": {
+      "payloadMbps": 40,
+      "encodedGBPerHour": 18,
+      "encodedGBPerDay": 432
+    },
+    "fullFrameProcessingFpsAtTenCameras": 150,
+    "decodedBgrBytesPer1080pFrame": 6220800,
+    "twoFrameQueuesAtTenCamerasBytes": 124416000
+  },
+  "limits": "File readiness checks do not validate a network stream, physical-device compatibility, timeout behavior or 1080p/15-FPS processing capacity. Existing workflows were not modified."
+}
