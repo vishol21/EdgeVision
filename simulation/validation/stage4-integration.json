@@ -1,0 +1,61 @@
+{
+  "completedAt": "2026-11-17T12:37:45.474Z",
+  "type": "synthetic_multi_recording_validation",
+  "completeBatchId": "2876eae2e1054064858a5b4942a56f65",
+  "partialBatchId": "778a105872ed434cbb0034c7f13f6679",
+  "failedBatchId": "52eb8113a41b4faf9454c22fef352d0d",
+  "simulationFailureBatchId": "ddc76a780bd84ecf87b375bba7d0a494",
+  "complete": {
+    "cameraCount": 2,
+    "tupleCounts": [
+      20,
+      12
+    ],
+    "intervals": [
+      0.1,
+      0.25
+    ],
+    "totalTuples": 32,
+    "maxDuration": 3
+  },
+  "partial": {
+    "selected": 3,
+    "included": 1,
+    "statuses": [
+      "completed",
+      "analysis_failed",
+      "upload_failed"
+    ],
+    "totalTuples": 20
+  },
+  "detectionAccuracyValidated": false,
+  "additionalChecks": {
+    "tupleCap": {
+      "configuredTestLimit": 31,
+      "actualCombinedTuples": 32,
+      "batchId": "42663e36d0954685ba139826f9a1fb9b",
+      "analyticsPreserved": true,
+      "simulationPrevented": true
+    },
+    "interruptedDraftId": "f51f7ca3c13c41d49a1bcc43642d66cc",
+    "restartRecoveryPassed": true,
+    "cameraReportAndStatusAssociationRecoveryPassed": true,
+    "swappedResultSourceIdentityRejected": true,
+    "individualReportsPreservedOnComparisonRejection": true,
+    "malformedCameraDescriptorsRejected": true,
+    "controlledJavaProfileCases": {
+      "perCameraBatchingCpuPayloadAndIntervalsPassed": true,
+      "malformedProfilesRejected": 9,
+      "tenSourcesPassed": true
+    },
+    "browser": {
+      "batchId": "45ab604758044fa7b390eb1e29eff1ff",
+      "completeTwoCameraTupleCount": 32,
+      "individualReportWithoutReplacingComparison": true,
+      "refreshNeutral": true,
+      "explicitRecovery": true,
+      "partialAndAllFailedPresentation": true,
+      "narrowScreenControlAndTableCheck": true
+    }
+  }
+}

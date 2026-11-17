@@ -56,6 +56,7 @@ public final class EdgeVisionSimulation {
     private static final int SIMULATION_HORIZON = 2_000;
 
     private EdgeVisionSimulation() { }
+    static MultiVideoWorkloadProfile activeMultiProfile;
 
     public static void main(String[] args) throws Exception {
         if ((args.length < 1 || args.length > 3)
@@ -64,6 +65,7 @@ public final class EdgeVisionSimulation {
         }
         String scenario = args[0].toLowerCase();
         VideoWorkloadProfile workloadProfile = null;
+        activeMultiProfile = null;
         int virtualCameraCount = DEFAULT_VIRTUAL_CAMERA_COUNT;
         String standaloneWorkloadProfileId = null;
         if (args.length >= 2) {
@@ -82,23 +84,27 @@ public final class EdgeVisionSimulation {
                 if (args.length == 3) {
                     throw new IllegalArgumentException("A workload profile file cannot be combined with a standalone workload profile ID.");
                 }
-                workloadProfile = VideoWorkloadProfile.read(java.nio.file.Path.of(args[1]));
+                java.nio.file.Path profilePath = java.nio.file.Path.of(args[1]);
+                org.json.simple.JSONObject profileRoot = MultiVideoWorkloadProfile.readRoot(profilePath);
+                if ("multi_video".equals(profileRoot.get("profileType"))) activeMultiProfile = new MultiVideoWorkloadProfile(profileRoot);
+                else workloadProfile = VideoWorkloadProfile.read(profilePath);
             }
         }
-        if (workloadProfile == null && standaloneWorkloadProfileId == null) {
+        if (workloadProfile == null && activeMultiProfile == null && standaloneWorkloadProfileId == null) {
             standaloneWorkloadProfileId = java.util.UUID.randomUUID().toString().replace("-", "");
         }
         SimulationTelemetry.reset();
-        org.fog.utils.Config.MAX_SIMULATION_TIME = workloadProfile == null
-                ? SIMULATION_HORIZON : workloadProfile.simulationHorizon();
+        org.fog.utils.Config.MAX_SIMULATION_TIME = activeMultiProfile != null ? activeMultiProfile.simulationHorizon()
+                : workloadProfile == null ? SIMULATION_HORIZON : workloadProfile.simulationHorizon();
 
         Log.disable();
         CloudSim.init(1, Calendar.getInstance(), false);
         FogBroker broker = new FogBroker("edgevision-broker");
         List<FogDevice> devices = createTopology();
-        Application application = createApplication(broker.getId(), workloadProfile);
+        Application application = activeMultiProfile == null ? createApplication(broker.getId(), workloadProfile)
+                : createMultiApplication(broker.getId(), activeMultiProfile);
         application.setUserId(broker.getId());
-        List<Sensor> sensors = workloadProfile == null
+        List<Sensor> sensors = activeMultiProfile != null ? createMultiSources(broker.getId(), devices, activeMultiProfile) : workloadProfile == null
                 ? createVirtualCameraSources(broker.getId(), devices, virtualCameraCount)
                 : createProfileCameras(broker.getId(), devices, workloadProfile);
         ModuleMapping mapping = createModuleMapping(scenario);
@@ -108,7 +114,7 @@ public final class EdgeVisionSimulation {
         final String configuredWorkloadProfileId = standaloneWorkloadProfileId;
         MetricsController controller = new MetricsController("edgevision-controller", devices,
                 sensors, application, scenario, wallClockStartNanos,
-                workloadProfile == null
+                activeMultiProfile != null ? activeMultiProfile::resultMetadata : workloadProfile == null
                         ? () -> standaloneWorkloadMetadata(configuredCameraCount, configuredWorkloadProfileId)
                         : workloadProfile::resultMetadata);
         controller.submitApplication(application,
@@ -233,6 +239,70 @@ public final class EdgeVisionSimulation {
         application.setLoops(new ArrayList<>(Arrays.asList(new AppLoop(new ArrayList<>(Arrays.asList(
                 "CAMERA", VIDEO_ANALYZER, EVENT_DETECTOR, CLOUD_RESULT_STORAGE))))));
         return application;
+    }
+
+    private static Application createMultiApplication(int userId, MultiVideoWorkloadProfile profile) {
+        Application application = Application.createApplication(APP_ID, userId);
+        application.addAppModule(VIDEO_ANALYZER, 512);
+        application.addAppModule(EVENT_DETECTOR, 512);
+        application.addAppModule(CLOUD_RESULT_STORAGE, 512);
+        List<AppLoop> loops = new ArrayList<>();
+        for (MultiVideoWorkloadProfile.Camera camera : profile.cameras) {
+            VideoWorkloadProfile p = camera.profile();
+            application.addAppEdge(camera.inputType(), VIDEO_ANALYZER, p.analyzerMiPerTuple(), p.cameraPayloadBytes(), camera.inputType(), Tuple.UP, AppEdge.SENSOR);
+            application.addAppEdge(VIDEO_ANALYZER, EVENT_DETECTOR, p.eventDetectorMiPerTuple(), ANALYZED_FRAME_BYTES, camera.analyzedType(), Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(EVENT_DETECTOR, CLOUD_RESULT_STORAGE, 500, EVENT_RECORD_BYTES, camera.resultType(), Tuple.UP, AppEdge.MODULE);
+            application.addTupleMapping(VIDEO_ANALYZER, camera.inputType(), camera.analyzedType(), new FractionalSelectivity(1.0));
+            application.addTupleMapping(EVENT_DETECTOR, camera.analyzedType(), camera.resultType(), new FractionalSelectivity(1.0));
+            loops.add(new AppLoop(new ArrayList<>(Arrays.asList(camera.inputType(), VIDEO_ANALYZER, EVENT_DETECTOR, CLOUD_RESULT_STORAGE))));
+        }
+        application.setLoops(loops);
+        return application;
+    }
+
+    private static List<Sensor> createMultiSources(int userId, List<FogDevice> devices, MultiVideoWorkloadProfile profile) {
+        List<Sensor> sensors = new ArrayList<>();
+        for (int i = 0; i < profile.cameras.size(); i++) {
+            sensors.add(new MultiCameraSensor(userId, devices.get(i % 2 + 1).getId(), profile.cameras.get(i), profile));
+        }
+        return sensors;
+    }
+
+    private static final class MultiCameraSensor extends Sensor {
+        private final MultiVideoWorkloadProfile.Camera camera;
+        private final MultiVideoWorkloadProfile owner;
+        private long remaining;
+        MultiCameraSensor(int userId, int gatewayId, MultiVideoWorkloadProfile.Camera camera, MultiVideoWorkloadProfile owner) {
+            super("recording-" + camera.cameraId(), camera.inputType(), userId, APP_ID,
+                    new DeterministicDistribution(camera.profile().tupleIntervalSeconds));
+            this.camera = camera;
+            this.owner = owner;
+            remaining = camera.profile().tupleCount;
+            setGatewayDeviceId(gatewayId);
+            setLatency(SENSOR_TO_EDGE_LATENCY);
+        }
+        @Override public void transmit() {
+            super.transmit();
+            SimulationTelemetry.addNetworkBytes(camera.profile().cameraPayloadBytes());
+        }
+        @Override protected int updateTimings(String source, String destination) {
+            int id = super.updateTimings(source, destination);
+            SimulationTelemetry.recordCameraEmission(id, CloudSim.clock());
+            owner.emitted(camera.cameraId(), id, CloudSim.clock());
+            return id;
+        }
+        @Override public void startEntity() {
+            send(getGatewayDeviceId(), CloudSim.getMinTimeBetweenEvents(), FogEvents.SENSOR_JOINED, getGeoLocation());
+            send(getId(), CloudSim.getMinTimeBetweenEvents(), FogEvents.EMIT_TUPLE);
+        }
+        @Override public void processEvent(org.cloudbus.cloudsim.core.SimEvent event) {
+            if (event.getTag() == FogEvents.EMIT_TUPLE && remaining > 0) {
+                transmit();
+                if (--remaining > 0) send(getId(), camera.profile().tupleIntervalSeconds, FogEvents.EMIT_TUPLE);
+            } else if (event.getTag() != FogEvents.TUPLE_ACK) {
+                throw new IllegalStateException("Unexpected multi-camera sensor event.");
+            }
+        }
     }
 
     private static ModuleMapping createModuleMapping(String scenario) {
@@ -388,6 +458,7 @@ public final class EdgeVisionSimulation {
             if ("cloud".equals(getName()) && payload instanceof Tuple
                     && CLOUD_RESULT_STORAGE.equals(((Tuple) payload).getDestModuleName())) {
                 SimulationTelemetry.recordStoredResult();
+                if (activeMultiProfile != null) activeMultiProfile.arrived(((Tuple) payload).getActualTupleId());
             }
             if (payload instanceof Tuple && EVENT_DETECTOR.equals(((Tuple) payload).getDestModuleName())) {
                 SimulationTelemetry.recordAnalyticsArrival(((Tuple) payload).getActualTupleId(), CloudSim.clock());

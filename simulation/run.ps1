@@ -72,7 +72,8 @@ foreach ($currentScenario in $scenarios) {
         if ($jobId -notmatch '^[a-f0-9]{32}$' -or $null -eq $record.workloadProfile) {
             throw 'Profile simulation output did not include a valid workload profile identity; no result file was written.'
         }
-        $profileResultsDir = Join-Path (Join-Path $resultsDir 'video_workloads') $jobId
+        $profileFolder = if ($record.workloadProfile.type -eq 'multi_video') { 'video_batches' } else { 'video_workloads' }
+        $profileResultsDir = Join-Path (Join-Path $resultsDir $profileFolder) $jobId
         New-Item -ItemType Directory -Path $profileResultsDir -Force | Out-Null
         $resultPath = Join-Path $profileResultsDir "$currentScenario.json"
     }

@@ -1,5 +1,7 @@
 # EdgeVision Video Analytics (Phase 2)
 
+For the Stage 4 multiple-recording website workflow, camera identity, combined profiles, resource limits and recovery, see [MULTI_CAMERA.md](MULTI_CAMERA.md). The single-video Python CLI below remains unchanged.
+
 This Python package processes uploaded/local CCTV video using Ultralytics YOLO detection, persistent ByteTrack tracking, OpenCV annotated output, and configurable rule-based unusual-activity events. Node invokes it as a separate local process; the Python package does not call iFogSim or the frontend.
 
 The system detects only the configured COCO classes (person, car, motorcycle, bus). Event labels mean a configured rule was met; they do not establish harmful or criminal activity. The pipeline performs video object detection and tracking, not real-time object detection on encoded video streams or forensic validation.

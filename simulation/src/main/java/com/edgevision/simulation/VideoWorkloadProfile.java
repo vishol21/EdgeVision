@@ -126,6 +126,10 @@ final class VideoWorkloadProfile {
         }
     }
 
+    static VideoWorkloadProfile fromJson(JSONObject root) {
+        return new VideoWorkloadProfile(root);
+    }
+
     long analyzerMiPerTuple() {
         return videoAnalyzerMI == null ? 1_000L : Math.max(1L, Math.round(videoAnalyzerMI / tupleCount));
     }

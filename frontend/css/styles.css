@@ -126,11 +126,24 @@ td { padding: 9px 6px; border-top: 1px solid #26364a; color: var(--muted); font-
 .event-card p, .event-card small { color: var(--muted); font-size: 10px; line-height: 1.5; }
 .event-card small { display: block; margin-top: 3px; color: var(--subtle); }
 .upload-panel .progress-track { margin-top: 11px; }
+.multi-video-panel { margin-top: 18px; }
+.multi-video-panel > label { display: block; margin: 12px 0 6px; }
+.multi-video-panel input[type="file"] { display: block; max-width: 100%; color: var(--text); font: inherit; }
+.multi-video-panel td { white-space: normal; overflow-wrap: anywhere; }
+.multi-video-panel .button, .multi-video-panel .simulation-note, .multi-video-panel td, .multi-video-panel th { font-size: 12px; }
+.multi-video-panel .simulation-note { line-height: 1.5; }
+.multi-video-panel th { color: var(--muted); }
+.multi-video-panel table { min-width: 560px; }
+.multi-video-panel td:nth-child(3) { min-width: 125px; }
+.multi-video-panel td:nth-child(3) .button { white-space: nowrap; }
+.batch-recovery { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.batch-recovery input { min-width: 0; width: 270px; max-width: 100%; padding: 8px; background: var(--background); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font: inherit; }
 .nav-link { white-space: nowrap; }
 
 @media (min-width: 1400px) { .main-content { padding-right: 40px; padding-left: 40px; } }
 @media (max-width: 1080px) { .sidebar { width: 190px; } .main-content { margin-left: 190px; padding-right: 20px; padding-left: 20px; } .results-layout { grid-template-columns: 1fr; } }
 @media (max-width: 740px) {
+  .multi-video-panel .video-actions > .button { flex: 0 0 auto; width: 100%; }
   .sidebar { position: sticky; top: 0; z-index: 5; width: auto; height: auto; padding: 9px 12px; flex-direction: row; align-items: center; justify-content: space-between; border-right: 0; border-bottom: 1px solid var(--border); }
   .brand { margin: 0; font-size: 13px; } .brand-mark { width: 28px; height: 28px; }
   .sidebar nav { display: flex; gap: 2px; } .nav-link { min-height: 32px; padding: 0 7px; font-size: 10px; } .nav-link span, .sidebar-footer { display: none; }

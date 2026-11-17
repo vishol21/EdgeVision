@@ -42,7 +42,8 @@ final class MetricsController extends Controller {
         double simulatedTime = CloudSim.clock();
         double energyJoules = devices.stream().mapToDouble(FogDevice::getEnergyConsumption).sum();
         double nativeNetworkIndex = NetworkUsageMonitor.getNetworkUsage() / Config.MAX_SIMULATION_TIME;
-        Double applicationLoopLatencyMs = getLoopLatency(0);
+        Double applicationLoopLatencyMs = EdgeVisionSimulation.activeMultiProfile == null ? getLoopLatency(0)
+                : EdgeVisionSimulation.activeMultiProfile.loopLatency();
         Double analyticsLatencyMs = SimulationTelemetry.getAnalyticsLatencyAverage();
         double networkUsageMb = SimulationTelemetry.getNetworkBytes() / 1_000_000.0;
         long wallClockMillis = (System.nanoTime() - wallClockStartNanos) / 1_000_000L;

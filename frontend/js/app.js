@@ -14,6 +14,9 @@
     charts: {},
     comparisonMode: 'standalone',
     comparisonVersion: 0,
+    batchFiles: [],
+    batch: null,
+    batchLimits: { maxCameras: 10, maxTotalBytes: 1073741824, maxFileBytes: 524288000, maxCombinedTuples: 100000 },
     video: { file: null, previewUrl: null, jobId: null, report: null, reportJobId: null, workloadProfile: null, simulationStatus: 'not_started', simulationError: null, comparison: null }
   };
   const buttons = [...document.querySelectorAll('[data-run]')];
@@ -32,9 +35,15 @@
 
   function renderControls() {
     const profileSelected = state.comparisonMode === 'profile';
+    document.querySelector('.scenario-description strong').textContent = profileSelected
+      ? 'Standalone virtual-camera controls (inactive for recording comparisons)' : 'Choose a placement strategy';
     buttons.forEach(button => { button.disabled = state.running || profileSelected; });
     cameraCountInput.disabled = state.running || profileSelected;
     analyzeButton.disabled = state.running || !state.video.file;
+    batchButton.disabled = state.running || state.batchFiles.length < 2;
+    batchFileInput.disabled = state.running;
+    document.querySelector('#recover-batch-button').disabled = state.running;
+    document.querySelector('#batch-recovery-id').disabled = state.running;
     comparisonModeButton.hidden = !state.video.comparison;
     comparisonModeButton.disabled = state.running;
     comparisonModeButton.textContent = profileSelected ? 'Use virtual-camera simulation' : 'Show video comparison';
@@ -95,7 +104,7 @@
     const hasResult = Object.values(state.results).some(Boolean);
     const successfulCount = Object.values(state.results).filter(Boolean).length;
     document.querySelector('#results-note').textContent = state.comparisonMode === 'profile'
-      ? (hasResult ? `Video job ${state.video.jobId} · ${state.video.simulationStatus}` : `Video job ${state.video.jobId} · ${state.video.simulationStatus}`)
+      ? `${state.video.workloadProfile?.type === 'multi_video' || state.batch?.batchId === state.video.jobId ? 'Recording batch' : 'Video job'} ${state.video.jobId} · ${state.video.simulationStatus}`
       : (hasResult ? `${successfulCount} completed standalone scenario${successfulCount === 1 ? '' : 's'}` : 'No simulation results yet');
 
     if (!hasResult && state.comparisonMode !== 'profile') {
@@ -128,7 +137,13 @@
     }
     const profile = state.video.workloadProfile;
     if (!profile) {
-      target.textContent = `Video job ${state.video.jobId}: waiting for a validated workload profile.`;
+      target.textContent = state.batch?.batchId === state.video.jobId && ['failed', 'interrupted', 'simulation_failed'].includes(state.batch.status)
+        ? `Recording batch ${state.video.jobId}: no combined comparison is available. ${state.batch.message}`
+        : `Video job ${state.video.jobId}: waiting for a validated workload profile.`;
+      return;
+    }
+    if (profile.type === 'multi_video') {
+      target.textContent = `Recording batch ${profile.jobId}: ${profile.cameraCount} analyzed cameras of ${profile.requestedCameraCount} selected; ${format(profile.tupleCount, 0)} tuples; longest recording ${format(profile.durationSeconds)} s. Each camera retains its own interval and identity. Successful cameras only; excluded cameras are listed in the batch table. CPU and payload values use each profile's declared assumptions. Actual frames are not sent to iFogSim.`;
       return;
     }
     const parts = [
@@ -242,6 +257,18 @@
     })) {
       throw new Error('Cloud and edge results are missing or belong to a different video job.');
     }
+    if (simulation.status === 'completed' && simulation.workloadProfile?.type === 'multi_video') {
+      const expected = simulation.workloadProfile.sources;
+      if (['cloud', 'edge'].some(scenario => {
+        const actual = simulation[scenario].workloadProfile;
+        return actual.type !== 'multi_video' || actual.virtualCameraSources !== expected.length ||
+          actual.tupleCountFromProfile !== simulation.workloadProfile.tupleCount ||
+          actual.generatedTuples !== simulation.workloadProfile.tupleCount ||
+          !Array.isArray(actual.sources) || actual.sources.length !== expected.length ||
+          expected.some((source, index) => actual.sources[index]?.cameraId !== source.cameraId ||
+            actual.sources[index]?.jobId !== source.jobId || actual.sources[index]?.processedTuples !== source.tupleCount);
+      })) throw new Error('Combined comparison does not match the selected camera sources.');
+    }
     state.comparisonVersion += 1;
     state.comparisonMode = 'profile';
     setPlacementSelection(null);
@@ -252,10 +279,8 @@
     state.video.simulationError = simulation.error || null;
     state.results = { cloud: null, edge: null };
     state.latestScenario = null;
-    state.statuses = {
-      cloud: simulation.status === 'completed' ? 'Success' : simulation.status === 'failed' ? 'Failed' : simulation.status,
-      edge: simulation.status === 'completed' ? 'Success' : simulation.status === 'failed' ? 'Failed' : simulation.status
-    };
+    const statusLabel = { completed: 'Success', failed: 'Failed', not_started: 'Not run', pending: 'Pending', running: 'Running' }[simulation.status] || 'Unavailable';
+    state.statuses = { cloud: statusLabel, edge: statusLabel };
     if (simulation.status === 'completed') {
       setRecord('cloud', simulation.cloud);
       setRecord('edge', simulation.edge);
@@ -273,6 +298,10 @@
   const videoProgress = document.querySelector('#video-progress');
   const videoError = document.querySelector('#video-error');
   const videoResults = document.querySelector('#video-results');
+  const batchFileInput = document.querySelector('#batch-files');
+  const batchButton = document.querySelector('#analyze-batch-button');
+  const batchStatus = document.querySelector('#batch-status');
+  const batchError = document.querySelector('#batch-error');
 
   function formatBytes(bytes) {
     if (!Number.isFinite(bytes) || bytes < 0) return 'Unknown size';
@@ -284,7 +313,7 @@
   }
 
   function chooseVideo(file) {
-    if (!file) return;
+    if (!file || state.running) return;
     const allowed = ['.mp4', '.m4v', '.mov', '.avi', '.mkv', '.webm'];
     const extension = `.${file.name.split('.').pop()}`.toLowerCase();
     videoError.hidden = true;
@@ -322,9 +351,110 @@
     row.append(cell);
   }
 
+  function renderBatch(batch = null) {
+    const table = document.querySelector('#batch-camera-table');
+    table.replaceChildren();
+    const cameras = batch?.cameras || state.batchFiles.map((file, index) => ({ filename: file.name, cameraId: `Selection ${index + 1}`, status: 'selected' }));
+    for (const camera of cameras) {
+      const row = document.createElement('tr');
+      addCell(row, `${camera.filename} · ${camera.cameraId}`);
+      const label = { selected: 'Selected', awaiting_upload: 'Waiting for upload', uploading: 'Uploading', uploaded: 'Uploaded',
+        processing: 'Analyzing', completed: 'Analyzed', upload_failed: 'Upload rejected', analysis_failed: 'Analysis failed', interrupted: 'Interrupted' }[camera.status] || 'Unavailable';
+      addCell(row, camera.error ? `${label}: ${camera.error}` : label);
+      const action = document.createElement('td');
+      if (camera.status === 'completed') {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'button'; button.textContent = 'View analytics';
+        button.addEventListener('click', async () => {
+          try { renderVideoReport(await fetchVideoJson(camera.reportUrl), camera.jobId); }
+          catch (error) { batchError.textContent = error.message; batchError.hidden = false; }
+        });
+        action.append(button);
+      } else action.textContent = 'Individual report appears after successful analysis.';
+      row.append(action); table.append(row);
+    }
+    if (!cameras.length) table.innerHTML = '<tr><td colspan="3">No camera recordings selected.</td></tr>';
+    if (batch) {
+      document.querySelector('#batch-recovery-id').value = batch.batchId;
+      batchStatus.textContent = batch.message;
+      const summary = batch.summary;
+      const included = batch.cameras.filter(camera => camera.status === 'completed').length;
+      const people = summary?.objectCountsByClass?.person || {};
+      const vehicleClasses = ['car', 'bus', 'motorcycle'];
+      const vehicles = vehicleClasses.reduce((total, name) => total + Number(summary?.objectCountsByClass?.[name]?.trackedObservations || 0), 0);
+      document.querySelector('#batch-summary').textContent = summary
+        ? `Batch ${batch.batchId}: ${included}/${batch.cameras.length} camera analyses succeeded. ${format(batch.simulation.workloadProfile?.tupleCount ?? 0, 0)} combined tuples. People: ${format(people.trackedObservations || 0, 0)} track observations; ${format(people.uniqueTrackingIds || 0, 0)} summed camera-scoped IDs. Vehicle observations: ${format(vehicles, 0)}. Rule events: ${format(summary.eventCount, 0)}. Sum of per-camera processing durations: ${format(summary.processingDurationSecondsSum)} s. Track IDs are not deduplicated across cameras; zero events do not establish safety.`
+        : `${batch.cameras.length} recordings selected. Camera processing is sequential; failed inputs will remain listed.`;
+    } else document.querySelector('#batch-summary').textContent = `${cameras.length} recordings selected.`;
+  }
+
+  async function pollBatch(id) {
+    while (true) {
+      const batch = await fetchVideoJson(`/api/video/batches/${id}`);
+      if (state.video.jobId !== id) return;
+      state.batch = batch;
+      renderBatch(batch);
+      state.video.workloadProfile = batch.simulation.workloadProfile;
+      state.video.simulationStatus = batch.simulation.status;
+      renderAll();
+      if (!['draft', 'processing', 'simulation_running'].includes(batch.status)) {
+        applyVideoSimulation(batch.simulation, id);
+        const success = ['completed', 'partial_success'].includes(batch.status);
+        statusText.textContent = success ? (batch.status === 'partial_success' ? 'Partial success' : 'Complete') : 'Failed';
+        statusDetail.textContent = batch.message;
+        setFeedback(batch.message, success ? 'success' : 'error');
+        if (batch.error) { batchError.textContent = batch.error; batchError.hidden = false; }
+        break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1400));
+    }
+  }
+
+  async function analyzeBatch() {
+    if (state.running || state.batchFiles.length < 2) return;
+    const files = [...state.batchFiles];
+    batchError.hidden = true;
+    state.comparisonMode = 'standalone';
+    clearStandaloneResults();
+    setRunning(true, 'Uploading and analyzing multiple camera recordings.');
+    setFeedback('The multi-recording job is running.');
+    try {
+      const created = await fetchVideoJson('/api/video/batches', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cameras: files.map(file => ({ filename: file.name, sizeBytes: file.size })) }) });
+      const id = created.batchId;
+      selectProfileComparison(id);
+      state.batch = created;
+      renderBatch(created);
+      for (let index = 0; index < files.length; index++) {
+        const camera = created.cameras[index];
+        if (camera.status !== 'awaiting_upload') continue;
+        batchStatus.textContent = `Uploading recording ${index + 1}/${files.length}: ${files[index].name}`;
+        const response = await fetch(`/api/video/batches/${id}/cameras/${camera.cameraId}`, {
+          method: 'POST', headers: { 'X-File-Name': encodeURIComponent(files[index].name), 'Content-Type': 'application/octet-stream' }, body: files[index]
+        });
+        // Rejected camera uploads are persisted by the server and remain visible in the batch.
+        if (!response.ok && ![400, 413, 415].includes(response.status)) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.message || 'A camera upload could not complete.');
+        }
+        state.batch = await fetchVideoJson(`/api/video/batches/${id}`);
+        renderBatch(state.batch);
+      }
+      await fetchVideoJson(`/api/video/batches/${id}/run`, { method: 'POST' });
+      await pollBatch(id);
+    } catch (error) {
+      batchError.textContent = error.message; batchError.hidden = false;
+      batchStatus.textContent = 'The batch did not complete. Completed camera artifacts remain on the server.';
+      statusText.textContent = 'Failed'; statusDetail.textContent = error.message;
+      setFeedback('The camera batch did not complete. Check its error.', 'error');
+    } finally { setRunning(false); }
+  }
+
   function renderVideoReport(report, jobId) {
     state.video.report = report;
     state.video.reportJobId = jobId;
+    document.querySelector('#video-report-context').textContent = `Individual recording report · Job ${jobId}. Track IDs belong to this recording only.`;
     const counts = report.objectCountsByClass || {};
     const classes = ['person', 'car', 'bus', 'motorcycle'];
     const detections = name => Number(counts[name]?.trackedObservations || 0);
@@ -523,6 +653,32 @@
     chooseVideo(event.dataTransfer?.files?.[0]);
   });
   analyzeButton.addEventListener('click', analyzeSelectedVideo);
+  batchFileInput.addEventListener('change', () => {
+    if (state.running) return;
+    state.batchFiles = [...(batchFileInput.files || [])];
+    state.batch = null;
+    batchError.hidden = true;
+    batchStatus.textContent = 'Recordings selected. Start sequential analysis when ready.';
+    renderBatch(); renderControls();
+  });
+  batchButton.addEventListener('click', analyzeBatch);
+  document.querySelector('#recover-batch-button').addEventListener('click', async () => {
+    if (state.running) return;
+    const id = document.querySelector('#batch-recovery-id').value.trim();
+    batchError.hidden = true;
+    try {
+      if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('Enter the complete 32-character batch ID.');
+      setRunning(true, 'Recovering the selected recording batch.');
+      const batch = await fetchVideoJson(`/api/video/batches/${id}`);
+      if (batch.status === 'draft') throw new Error('This batch has not started. Finish its selected uploads or start a new batch.');
+      selectProfileComparison(id);
+      await pollBatch(id);
+    } catch (error) {
+      batchError.textContent = error.message; batchError.hidden = false;
+      statusText.textContent = 'Failed'; statusDetail.textContent = 'The selected batch could not be recovered.';
+    } finally { setRunning(false); }
+  });
+
 
   async function checkApiHealth() {
     const version = state.comparisonVersion;
@@ -530,7 +686,7 @@
       const health = await requestJson(`${API_ROOT}/health`);
       if (version !== state.comparisonVersion || state.running || state.comparisonMode !== 'standalone') return;
       if (health.status !== 'ok') throw new Error('The simulation API is not healthy.');
-      if (health.simulationRunning || health.videoAnalysisRunning) {
+      if (health.simulationRunning || health.videoAnalysisRunning || health.multiVideoRunning) {
         setFeedback('Another compute job is running on the server. Wait for it to finish before starting a run.');
       }
     } catch (error) {
@@ -612,7 +768,8 @@
       clearStandaloneResults();
     } else if (state.video.comparison) {
       applyVideoSimulation(state.video.comparison, state.video.jobId);
-      statusText.textContent = state.video.simulationStatus === 'completed' ? 'Complete' : 'Simulation failed';
+      statusText.textContent = state.video.simulationStatus === 'completed'
+        ? (state.batch?.batchId === state.video.jobId && state.batch.status === 'partial_success' ? 'Partial success' : 'Complete') : 'Simulation failed';
       statusDetail.textContent = 'Showing the selected video job comparison.';
       setFeedback('Showing video-associated results. Virtual-camera runs are separate.');
     }
@@ -625,4 +782,11 @@
   renderCameraWorkloadSelection();
   renderAll();
   checkApiHealth();
+  fetchVideoJson('/api/video/batches/config').then(limits => {
+    if (['maxCameras', 'maxFileBytes', 'maxTotalBytes', 'maxCombinedTuples'].every(key => Number.isFinite(limits[key]))) {
+      state.batchLimits = limits;
+      const limitSize = bytes => bytes >= 1073741824 ? `${format(bytes / 1073741824)} GiB` : `${format(bytes / 1048576)} MiB`;
+      document.querySelector('#batch-limits-note').textContent = `Choose 2-${limits.maxCameras} uploaded recordings, one per camera. Up to ${limitSize(limits.maxFileBytes)} per file, ${limitSize(limits.maxTotalBytes)} total and ${format(limits.maxCombinedTuples, 0)} combined tuples. Processing is sequential; only successful cameras are simulated together. Recording start times are modeled together, without assuming synchronized footage.`;
+    }
+  }).catch(() => { /* API availability is reported by the health check. */ });
 })();

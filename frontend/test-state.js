@@ -69,7 +69,11 @@ function harness(handler = async () => response({ status: 'ok' })) {
     document: { querySelector: get, querySelectorAll: selector => selector === '[data-run]' ? buttons : [],
       createElement: () => new Element(), createTextNode: text => ({ textContent: text }) },
     window: { Chart }, Chart,
-    fetch: async (url, options) => { calls.push(url); return handler(url, options); },
+    fetch: async (url, options) => {
+      calls.push(url);
+      if (url === '/api/video/batches/config') return response({ maxCameras: 10, maxFileBytes: 524288000, maxTotalBytes: 1073741824, maxCombinedTuples: 100000 });
+      return handler(url, options);
+    },
     URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
     setTimeout, console
   };
@@ -90,7 +94,7 @@ test('fresh page and refresh never request historical results; controls are neut
     const ui = harness();
     await flush();
     ui.empty();
-    assert.deepEqual(ui.calls, ['/api/health']);
+    assert.deepEqual(ui.calls, ['/api/health', '/api/video/batches/config']);
     ui.buttons.forEach(button => assert.equal(button.attributes['aria-pressed'], 'false'));
   }
 });
@@ -190,4 +194,65 @@ test('video comparison stays selected until explicit switch; switching back rest
   assert.match(ui.get('#results-note').textContent, new RegExp(id));
   assert.equal(ui.buttons[0].disabled, true);
   ui.buttons.forEach(button => assert.equal(button.attributes['aria-pressed'], 'false'));
+});
+
+test('batch response renders combined results only for the selected complete camera identities', async () => {
+  for (const wrongIdentity of [false, true]) {
+    const batchId = 'd'.repeat(32);
+    const cameras = ['e', 'f'].map((character, index) => ({ cameraId: character.repeat(32), jobId: String(index + 1).repeat(32),
+      filename: `camera-${index}.avi`, status: 'completed', reportUrl: `/api/video/results/${String(index + 1).repeat(32)}` }));
+    const sources = cameras.map((camera, index) => ({ cameraId: camera.cameraId, jobId: camera.jobId, tupleCount: index ? 12 : 20 }));
+    const simulation = { jobId: batchId, status: 'completed', workloadProfile: { type: 'multi_video', jobId: batchId,
+      cameraCount: 2, requestedCameraCount: 2, durationSeconds: 3, tupleCount: 32, sources } };
+    for (const scenario of ['cloud', 'edge']) {
+      simulation[scenario] = result(scenario);
+      simulation[scenario].metrics.processedTuples = 32;
+      simulation[scenario].workloadProfile = { type: 'multi_video', jobId: batchId, virtualCameraSources: 2,
+        tupleCountFromProfile: 32, generatedTuples: 32,
+        sources: sources.map(source => ({ ...source, processedTuples: source.tupleCount })) };
+    }
+    if (wrongIdentity) simulation.edge.workloadProfile.sources[0].cameraId = 'a'.repeat(32);
+    const batch = { batchId, status: 'completed', message: 'Camera analyses and comparison completed.', cameras,
+      simulation, summary: { objectCountsByClass: {}, eventCount: 0, processingDurationSecondsSum: 1 } };
+    const ui = harness(async url => {
+      if (url.endsWith('/health')) return response({ status: 'ok' });
+      if (url === '/api/video/batches') return response({ batchId, message: 'Upload cameras.', cameras: cameras.map(camera => ({ ...camera, status: 'awaiting_upload' })) });
+      if (url.includes('/cameras/')) return response({ status: 'uploaded' });
+      return response(batch);
+    });
+    ui.get('#batch-files').files = [{ name: 'a.avi', size: 100 }, { name: 'b.avi', size: 100 }];
+    ui.get('#batch-files').emit('change');
+    await ui.get('#analyze-batch-button').emit('click');
+    assert.equal(ui.get('#run-status').textContent, wrongIdentity ? 'Failed' : 'Complete');
+    if (wrongIdentity) {
+      assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '—');
+      assert.ok(ui.charts.every(chart => chart.data.datasets[0].data.every(value => value === null)));
+    } else {
+      assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '12');
+      assert.match(ui.get('#batch-summary').textContent, /32 combined tuples/);
+      assert.equal(ui.get('#batch-recovery-id').value, batchId);
+      assert.equal(ui.buttons[0].disabled, true);
+    }
+  }
+});
+
+test('all-failed batch has neutral metrics, clear terminal context and no saved-result fallback', async () => {
+  const batchId = 'b'.repeat(32);
+  const cameras = ['c', 'd'].map((letter, index) => ({ cameraId: letter.repeat(32), jobId: null,
+    filename: `bad-${index}.txt`, status: 'upload_failed', error: 'Unsupported video format.' }));
+  const batch = { batchId, status: 'failed', message: 'No camera analysis succeeded. No combined simulation was run.', cameras,
+    error: 'All selected camera inputs failed.', simulation: { jobId: batchId, status: 'not_started', workloadProfile: null, cloud: null, edge: null } };
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url === '/api/video/batches') return response({ ...batch, status: 'draft', cameras: cameras.map(camera => ({ ...camera, status: 'awaiting_upload' })) });
+    if (url.includes('/cameras/')) return response({ message: 'Unsupported video format.' }, false);
+    return response(batch);
+  });
+  ui.get('#batch-recovery-id').value = batchId;
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#run-status').textContent, 'Failed');
+  assert.match(ui.get('#profile-run-info').textContent, /No camera analysis succeeded/);
+  assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '—');
+  assert.equal(ui.get('#results-table-body').children[0].children[1].textContent, 'Not run');
+  assert.ok(!ui.calls.includes('/api/results'));
 });

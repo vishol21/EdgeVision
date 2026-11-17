@@ -51,6 +51,8 @@ Values are emitted only after a simulation completes. Each scenario must run in 
 
 ## Build and run
 
+Combined recording profiles use the additive schema-2 `multi_video` path described in [MULTI_CAMERA.md](../video_analytics/MULTI_CAMERA.md). Each camera retains its finite interval/count and CPU/payload assumptions; paired outputs are stored in `results/video_batches/<batch-id>/`. Existing single-video and standalone formats/paths remain available. Combined horizons may expand to allow the independent traces and downstream processing to finish, and reported device energy depends on that horizon.
+
 Requires JDK 23 or newer with `javac` and `java` on `PATH`.
 
 ```powershell

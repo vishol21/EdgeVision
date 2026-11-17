@@ -25,6 +25,8 @@ The dashboard has three sections: Dashboard, Video Analytics, and Simulation & C
 
 ## Upload and analyze a video
 
+For multiple uploaded recordings, use **Multiple camera recordings** beneath the existing single-video controls. It analyzes cameras sequentially, preserves individual reports, and simulates one combined workload with each successful camera's own identity and timing. Partial failures stay visible. See [multi-camera setup, API, limits and verification](video_analytics/MULTI_CAMERA.md). This is uploaded-video processing, not live CCTV integration.
+
 1. Open **Video Analytics** and select or drag in a supported video.
 2. Check the local preview, filename and size, then click **Start Analysis**.
 3. Wait for video analysis, then for its workload-profile cloud and edge simulations to finish. The progress bar is indeterminate because the Python processor does not report reliable frame-by-frame progress.

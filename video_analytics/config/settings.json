@@ -15,6 +15,11 @@
     "max_file_size_bytes": 524288000,
     "allowed_extensions": [".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm"]
   },
+  "multi_video": {
+    "max_cameras": 10,
+    "max_total_file_size_bytes": 1073741824,
+    "max_combined_tuples": 100000
+  },
   "processing": {
     "frame_interval": 1,
     "output_fourcc": "mp4v"

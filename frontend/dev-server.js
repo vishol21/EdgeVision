@@ -24,6 +24,7 @@ const port = Number(process.env.PORT || 4173);
 const execFileAsync = promisify(execFile);
 let simulationRunning = false;
 let videoAnalysisRunning = false;
+let batchRunning = false;
 const videoJobs = new Map();
 let videoSettings = null;
 try {
@@ -156,7 +157,7 @@ async function readOptionalJsonBody(request, maxBytes = 16 * 1024) {
   return readJsonBody(request, maxBytes);
 }
 
-async function handleVideoUpload(request, response) {
+async function handleVideoUpload(request, response, batchContext = null) {
   if (!videoSettings || !maxVideoBytes) {
     sendJson(response, 503, { message: 'Video analytics configuration is unavailable.' });
     return;
@@ -165,11 +166,11 @@ async function handleVideoUpload(request, response) {
     sendJson(response, 503, { message: 'The video analytics Python environment is unavailable. Set up video_analytics/.venv first.' });
     return;
   }
-  if (simulationRunning || videoAnalysisRunning) {
+  if (simulationRunning || videoAnalysisRunning || batchRunning) {
     sendJson(response, 409, { message: 'A compute job is running. Wait for it to finish before uploading another video.' });
     return;
   }
-  if ([...videoJobs.values()].some(job => job.status === 'uploaded')) {
+  if (!batchContext && [...videoJobs.values()].some(job => job.status === 'uploaded' && !job.batchId)) {
     sendJson(response, 409, { message: 'An uploaded video is awaiting analysis. Analyze it before uploading another.' });
     return;
   }
@@ -225,6 +226,7 @@ async function handleVideoUpload(request, response) {
     }
     videoJobs.set(jobId, {
       jobId,
+      ...(batchContext || {}),
       status: 'uploaded',
       analysisStatus: 'uploaded',
       displayFilename: originalName,
@@ -242,6 +244,7 @@ async function handleVideoUpload(request, response) {
       simulationResults: { cloud: null, edge: null }
     });
     sendJson(response, 201, { jobId, status: 'uploaded', message: 'Video uploaded and validated.' });
+    return videoJobs.get(jobId);
   } catch (error) {
     await fs.promises.rm(uploadPath, { force: true }).catch(() => {});
     const status = error.code === 'VIDEO_TOO_LARGE' ? 413 : (error.statusCode || 400);
@@ -300,6 +303,25 @@ async function recoverCompletedVideoJob(jobId) {
 
   let simulationResults = { cloud: null, edge: null };
   let simulationError = profileError;
+  const sourceMarkerPath = path.join(videoOutputsRoot, jobId, 'batch-source.json');
+  if (publicProfile && fs.existsSync(sourceMarkerPath)) {
+    let association;
+    try {
+      association = JSON.parse(await fs.promises.readFile(sourceMarkerPath, 'utf8'));
+      if (association.jobId !== jobId || !isValidJobId(association.batchId) || !isValidJobId(association.cameraId)) return null;
+      const parent = JSON.parse(await fs.promises.readFile(path.join(videoOutputsRoot, 'batches', association.batchId, 'batch.json'), 'utf8'));
+      if (parent.batchId !== association.batchId || !parent.cameras?.some(camera => camera.cameraId === association.cameraId && camera.jobId === jobId)) return null;
+    } catch { return null; }
+    const savedTime = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
+    const job = { jobId, batchId: association.batchId, cameraId: association.cameraId, status: 'analysis_completed', analysisStatus: 'completed',
+      message: 'Camera analytics recovered; simulation belongs to its recording batch.', reportPath, report,
+      workloadProfile: publicProfile, simulationStatus: 'included_in_batch', simulationMessage: 'Use the parent batch comparison.',
+      simulationError: null, simulationResults, error: null, uploadPath: null,
+      createdAt: savedTime(association.createdAt), startedAt: savedTime(association.startedAt),
+      analysisCompletedAt: savedTime(association.analysisCompletedAt), completedAt: savedTime(association.analysisCompletedAt) };
+    videoJobs.set(jobId, job);
+    return job;
+  }
   if (publicProfile) {
     try {
       const profileResultsDir = path.resolve(resultsRoot, 'video_workloads', jobId);
@@ -465,7 +487,7 @@ function startProfileSimulations(job, profilePath) {
   child.once('close', code => { finalize(code); });
 }
 
-function startVideoAnalysis(job) {
+function startVideoAnalysis(job, { analysisOnly = false, onComplete = null } = {}) {
   job.status = 'processing';
   job.analysisStatus = 'processing';
   job.message = 'Video analysis is running.';
@@ -503,88 +525,101 @@ function startVideoAnalysis(job) {
     if (finished) return;
     finished = true;
     clearTimeout(timeout);
-    await fs.promises.rm(job.uploadPath, { force: true }).catch(() => {});
-    if (processError || exitCode !== 0) {
-      videoAnalysisRunning = false;
-      job.completedAt = new Date().toISOString();
-      job.analysisStatus = 'failed';
-      job.status = 'failed';
-      const detail = processError?.message || stderr || stdout || `Python processor exited with code ${exitCode}.`;
-      job.error = safeVideoError(detail);
-      job.message = 'Video analysis failed.';
-      return;
-    }
-    const reportLine = stdout.split(/\r?\n/).find(line => line.startsWith('Analytics report: '));
-    if (!reportLine) {
-      videoAnalysisRunning = false;
-      job.completedAt = new Date().toISOString();
-      job.analysisStatus = 'failed';
-      job.status = 'failed';
-      job.error = 'Python processing finished without returning an analytics report.';
-      job.message = 'Video analysis failed.';
-      return;
-    }
-    const reportPath = path.resolve(reportLine.slice('Analytics report: '.length).trim());
-    if (!within(videoOutputsRoot, reportPath) || path.basename(reportPath) !== 'report.json') {
-      videoAnalysisRunning = false;
-      job.completedAt = new Date().toISOString();
-      job.analysisStatus = 'failed';
-      job.status = 'failed';
-      job.error = 'Python processor returned an invalid private report reference.';
-      job.message = 'Video analysis failed.';
-      return;
-    }
-    let report;
     try {
-      report = JSON.parse(await fs.promises.readFile(reportPath, 'utf8'));
-      if (report.status !== 'completed' || report.jobId !== job.jobId || !report.video || !Array.isArray(report.events)) {
-        throw new Error('The analytics report has an invalid structure.');
+      await fs.promises.rm(job.uploadPath, { force: true }).catch(() => {});
+      if (processError || exitCode !== 0) {
+        videoAnalysisRunning = false;
+        job.completedAt = new Date().toISOString();
+        job.analysisStatus = 'failed';
+        job.status = 'failed';
+        const detail = processError?.message || stderr || stdout || `Python processor exited with code ${exitCode}.`;
+        job.error = safeVideoError(detail);
+        job.message = 'Video analysis failed.';
+        return;
       }
-      const outputRelative = report.video.annotatedVideo;
-      const outputMatch = typeof outputRelative === 'string' && outputRelative.match(/^outputs\/([a-f0-9]{32})\/annotated\.mp4$/);
-      if (!outputMatch) throw new Error('The annotated video reference is invalid.');
-      const outputPath = path.resolve(videoOutputsRoot, outputMatch[1], 'annotated.mp4');
-      if (!within(videoOutputsRoot, outputPath) || !fs.existsSync(outputPath)) throw new Error('The annotated video is missing.');
-      for (const event of report.events) {
-        if (event.evidence_frame && !/^evidence\/[a-f0-9]{32}\/[a-f0-9]{32}\.jpg$/.test(event.evidence_frame)) {
-          throw new Error('An evidence reference in the analytics report is invalid.');
+      const reportLine = stdout.split(/\r?\n/).find(line => line.startsWith('Analytics report: '));
+      if (!reportLine) {
+        videoAnalysisRunning = false;
+        job.completedAt = new Date().toISOString();
+        job.analysisStatus = 'failed';
+        job.status = 'failed';
+        job.error = 'Python processing finished without returning an analytics report.';
+        job.message = 'Video analysis failed.';
+        return;
+      }
+      const reportPath = path.resolve(reportLine.slice('Analytics report: '.length).trim());
+      if (!within(videoOutputsRoot, reportPath) || path.basename(reportPath) !== 'report.json') {
+        videoAnalysisRunning = false;
+        job.completedAt = new Date().toISOString();
+        job.analysisStatus = 'failed';
+        job.status = 'failed';
+        job.error = 'Python processor returned an invalid private report reference.';
+        job.message = 'Video analysis failed.';
+        return;
+      }
+      let report;
+      try {
+        report = JSON.parse(await fs.promises.readFile(reportPath, 'utf8'));
+        if (report.status !== 'completed' || report.jobId !== job.jobId || !report.video || !Array.isArray(report.events)) {
+          throw new Error('The analytics report has an invalid structure.');
         }
+        const outputRelative = report.video.annotatedVideo;
+        const outputMatch = typeof outputRelative === 'string' && outputRelative.match(/^outputs\/([a-f0-9]{32})\/annotated\.mp4$/);
+        if (!outputMatch || outputMatch[1] !== job.jobId) throw new Error('The annotated video reference is invalid.');
+        const outputPath = path.resolve(videoOutputsRoot, outputMatch[1], 'annotated.mp4');
+        if (!within(videoOutputsRoot, outputPath) || !fs.existsSync(outputPath)) throw new Error('The annotated video is missing.');
+        for (const event of report.events) {
+          if (event.evidence_frame && !new RegExp(`^evidence/${job.jobId}/[a-f0-9]{32}\\.jpg$`).test(event.evidence_frame)) {
+            throw new Error('An evidence reference in the analytics report is invalid.');
+          }
+        }
+      } catch (error) {
+        videoAnalysisRunning = false;
+        job.completedAt = new Date().toISOString();
+        job.analysisStatus = 'failed';
+        job.status = 'failed';
+        job.error = safeVideoError(error.message);
+        job.message = 'Video analysis failed.';
+        return;
       }
-    } catch (error) {
-      videoAnalysisRunning = false;
-      job.completedAt = new Date().toISOString();
-      job.analysisStatus = 'failed';
-      job.status = 'failed';
-      job.error = safeVideoError(error.message);
-      job.message = 'Video analysis failed.';
-      return;
-    }
 
-    job.reportPath = reportPath;
-    job.report = report;
-    job.analysisStatus = 'completed';
-    job.analysisCompletedAt = new Date().toISOString();
+      job.reportPath = reportPath;
+      job.report = report;
+      job.analysisStatus = 'completed';
+      job.analysisCompletedAt = new Date().toISOString();
 
-    const workloadProfilePath = path.join(videoOutputsRoot, 'workloads', `${job.jobId}.json`);
-    let workloadProfile;
-    try {
-      if (!within(videoOutputsRoot, workloadProfilePath) || !fs.existsSync(workloadProfilePath)) {
-        throw new Error('Python processing completed without creating the job workload profile.');
+      const workloadProfilePath = path.join(videoOutputsRoot, 'workloads', `${job.jobId}.json`);
+      let workloadProfile;
+      try {
+        if (!within(videoOutputsRoot, workloadProfilePath) || !fs.existsSync(workloadProfilePath)) {
+          throw new Error('Python processing completed without creating the job workload profile.');
+        }
+        workloadProfile = JSON.parse(await fs.promises.readFile(workloadProfilePath, 'utf8'));
+        if (!validWorkloadProfile(workloadProfile, job.jobId)) {
+          throw new Error('The generated workload profile is invalid or does not match this video job.');
+        }
+      } catch (error) {
+        failProfileSimulation(job, error.message);
+        return;
       }
-      workloadProfile = JSON.parse(await fs.promises.readFile(workloadProfilePath, 'utf8'));
-      if (!validWorkloadProfile(workloadProfile, job.jobId)) {
-        throw new Error('The generated workload profile is invalid or does not match this video job.');
+      job.workloadProfile = publicWorkloadProfile(workloadProfile);
+      if (analysisOnly) {
+        job.status = 'analysis_completed';
+        job.simulationStatus = 'included_in_batch';
+        job.simulationMessage = 'Use the parent recording batch comparison.';
+        job.completedAt = job.analysisCompletedAt;
+        job.message = 'Camera analysis completed; its workload belongs to the batch comparison.';
+        videoAnalysisRunning = false;
+        return;
       }
-    } catch (error) {
-      failProfileSimulation(job, error.message);
-      return;
+      job.status = 'simulation_pending';
+      job.simulationStatus = 'pending';
+      job.simulationMessage = 'Workload profile validated; cloud and edge simulations are pending.';
+      job.message = 'Video analysis completed. Cloud and edge simulations are starting.';
+      startProfileSimulations(job, workloadProfilePath);
+    } finally {
+      if (analysisOnly) onComplete?.(job);
     }
-    job.workloadProfile = publicWorkloadProfile(workloadProfile);
-    job.status = 'simulation_pending';
-    job.simulationStatus = 'pending';
-    job.simulationMessage = 'Workload profile validated; cloud and edge simulations are pending.';
-    job.message = 'Video analysis completed. Cloud and edge simulations are starting.';
-    startProfileSimulations(job, workloadProfilePath);
   };
 
   child.once('error', error => { finalize(null, error); });
@@ -622,6 +657,10 @@ async function sendPrivateFile(request, response, filePath, contentType, downloa
 }
 
 async function handleVideoApi(request, response, pathname, searchParams) {
+  if (pathname.startsWith('/api/video/batches')) {
+    await multiVideoApi.handle(request, response, pathname);
+    return;
+  }
   if (request.method === 'POST' && pathname === '/api/video/upload') {
     await handleVideoUpload(request, response);
     return;
@@ -637,7 +676,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     const job = videoJobs.get(body.jobId);
     if (!job) { sendJson(response, 404, { message: 'Video job not found.' }); return; }
     if (job.status !== 'uploaded') { sendJson(response, 409, { message: 'This video job has already been started.' }); return; }
-    if (simulationRunning || videoAnalysisRunning) { sendJson(response, 409, { message: 'Another compute job is running. Try again after it finishes.' }); return; }
+    if (simulationRunning || videoAnalysisRunning || batchRunning) { sendJson(response, 409, { message: 'Another compute job is running. Try again after it finishes.' }); return; }
     if (!startVideoAnalysis(job)) {
       sendJson(response, 503, { message: job.error || 'Python processor could not be started.' });
       return;
@@ -654,6 +693,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     if (kind === 'status') {
       sendJson(response, 200, {
         jobId, status: job.status, analysisStatus: job.analysisStatus,
+        ...(job.batchId ? { batchId: job.batchId, cameraId: job.cameraId } : {}),
         simulationStatus: job.simulationStatus, message: job.message,
         error: job.error,
         analysisError: job.error, simulationError: job.simulationError,
@@ -670,7 +710,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     if (searchParams.get('download') === '1') {
       await sendPrivateFile(request, response, job.reportPath, 'application/json; charset=utf-8', `edgevision-${jobId}-report.json`);
     } else {
-      sendJson(response, 200, reportForApi(job.report, jobId));
+      sendJson(response, 200, { ...reportForApi(job.report, jobId), ...(job.batchId ? { batchId: job.batchId, cameraId: job.cameraId } : {}) });
     }
     return;
   }
@@ -681,6 +721,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     if (!job) { sendJson(response, 404, { message: 'Video job not found.' }); return; }
     sendJson(response, 200, {
       jobId: job.jobId,
+      ...(job.batchId ? { batchId: job.batchId, cameraId: job.cameraId } : {}),
       status: job.simulationStatus,
       message: job.simulationMessage,
       error: job.simulationError,
@@ -694,7 +735,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
   match = pathname.match(/^\/api\/video\/output\/([a-f0-9]{32})$/);
   if (request.method === 'GET' && match) {
     const job = await getVideoJob(match[1]);
-    if (!job || job.status !== 'completed' || !job.report) { sendJson(response, 404, { message: 'Video output not found.' }); return; }
+    if (!job || job.analysisStatus !== 'completed' || !job.report) { sendJson(response, 404, { message: 'Video output not found.' }); return; }
     const outputRelative = job.report.video.annotatedVideo;
     const outputMatch = typeof outputRelative === 'string' && outputRelative.match(/^outputs\/([a-f0-9]{32})\/annotated\.mp4$/);
     if (!outputMatch) { sendJson(response, 404, { message: 'Video output not found.' }); return; }
@@ -708,7 +749,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
   if (request.method === 'GET' && match) {
     const [, jobId, eventId] = match;
     const job = await getVideoJob(jobId);
-    const event = job?.status === 'completed' ? job.report?.events.find(item => item.event_id === eventId) : null;
+    const event = job?.analysisStatus === 'completed' ? job.report?.events.find(item => item.event_id === eventId) : null;
     if (!event?.evidence_frame) { sendJson(response, 404, { message: 'Evidence image not found.' }); return; }
     const evidenceMatch = event.evidence_frame.match(/^evidence\/([a-f0-9]{32})\/([a-f0-9]{32})\.jpg$/);
     if (!evidenceMatch) { sendJson(response, 404, { message: 'Evidence image not found.' }); return; }
@@ -767,7 +808,7 @@ async function runScenario(scenario, cameraCount, workloadProfileId) {
 
 async function handleApi(request, response, pathname) {
   if (request.method === 'GET' && pathname === '/api/health') {
-    sendJson(response, 200, { status: 'ok', simulationRunning, videoAnalysisRunning,
+    sendJson(response, 200, { status: 'ok', simulationRunning, videoAnalysisRunning, multiVideoRunning: batchRunning,
       videoAnalyticsAvailable: Boolean(videoSettings && fs.existsSync(videoPython)) });
     return;
   }
@@ -783,7 +824,7 @@ async function handleApi(request, response, pathname) {
   }
 
   if (request.method === 'POST' && ['/api/simulate/cloud', '/api/simulate/edge', '/api/simulate/both'].includes(pathname)) {
-    if (simulationRunning || videoAnalysisRunning) {
+    if (simulationRunning || videoAnalysisRunning || batchRunning) {
       sendJson(response, 409, { message: 'A compute job is already running. Wait for it to finish before starting another.' });
       return;
     }
@@ -800,7 +841,7 @@ async function handleApi(request, response, pathname) {
       return;
     }
     // Reading the request body yields; another request may have acquired the compute slot.
-    if (simulationRunning || videoAnalysisRunning) {
+    if (simulationRunning || videoAnalysisRunning || batchRunning) {
       sendJson(response, 409, { message: 'A compute job is already running. Wait for it to finish before starting another.' });
       return;
     }
@@ -829,6 +870,24 @@ async function handleApi(request, response, pathname) {
 
   sendJson(response, 404, { message: 'API endpoint not found.' });
 }
+
+const multiVideoApi = require('./multi-video').createMultiVideoApi({
+  outputsRoot: videoOutputsRoot, resultsRoot, settings: videoSettings,
+  readJsonBody, sendJson, uploadVideo: handleVideoUpload, getVideoJob,
+  validWorkloadProfile, validRecord, safeError: safeVideoError,
+  isBusy: () => simulationRunning || videoAnalysisRunning || batchRunning ||
+    [...videoJobs.values()].some(job => job.status === 'uploaded' && !job.batchId),
+  setBusy: value => { batchRunning = value; },
+  analyzeVideo: job => new Promise(resolve => {
+    if (!startVideoAnalysis(job, { analysisOnly: true, onComplete: resolve })) resolve(job);
+  }),
+  runSimulation: async profilePath => {
+    const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    await execFileAsync(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+      '-File', runScript, '-Profile', profilePath, '-Scenario', 'both'],
+    { cwd: projectRoot, windowsHide: true, timeout: 30 * 60 * 1000, maxBuffer: 4 * 1024 * 1024 });
+  }
+});
 
 const server = http.createServer(async (request, response) => {
   let pathname;
