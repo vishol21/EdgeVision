@@ -5,8 +5,8 @@
 - Repository: https://github.com/vishol21/EdgeVision.git
 - Workspace: EdgeVision project root (absolute local path omitted from version control).
 - Current branch: main.
-- Current stage: Stage 6 reference-paper alignment completed locally; publication review pending; no live implementation authorized.
-- Overall progress: audit and Stages 1-5 published; Stage 6 selected full-text paper reviewed and implementation alignment documented.
+- Current stage: Stage 7 performance evaluation completed locally; publication review pending; Stage 8 awaiting approval; no live implementation authorized.
+- Overall progress: audit and Stages 1-6 published; Stage 7 eleven-case evaluation completed with retained evidence and documented trade-offs.
 - Authority: user handover received 2026-11-17 explicitly directs Stage 0 first and requires approval for each subsequent stage.
 
 ## Stage table
@@ -19,7 +19,7 @@
 | 4 | Multiple uploaded CCTV videos | Completed | User approved with yah; later go on continued the active stage |
 | 5 | Investigate live CCTV/IP camera integration | Completed | User approved feasibility only; explicitly no hardware assumed and no live implementation |
 | 6 | Align implementation with selected research paper | Completed | User approved continuation and supplied the selected full paper |
-| 7 | Performance evaluation | Not started | Not received |
+| 7 | Performance evaluation | Completed | User approved concrete plan with ok; go on continued active work |
 | 8 | Dashboard and system quality | Not started | Not received |
 | 9 | Final documentation and presentation | Not started | Not received |
 | G0 | Inspect local and remote Git state | Completed | Read-only Stage 0 inspection |
@@ -216,7 +216,7 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 | 2026-11-17 | 3 | Explicit yes to Stage 2 publication and Stage 3 | Experiment runner, analysis/tests, raw evidence/CSV/chart and report; model preserved | 60 measured + 2 warm-up scenarios passed; 30 matched pairs; 6 reference tests; 96-summary audit; plot inspected | 6285c9a8ee5a866d98f5fdcb24abc7eb9b0f8fa1 / origin main verified | Started authorized Stage 4; latency-unit correction remains required |
 | 2026-11-17 | 4 | Explicit yah to Stage 3 publication and Stage 4; go on continued active work | Multi-recording batch API/UI, independent-source Java integration, recovery/partial failures, tests/docs/evidence | Original API pass; Python 23 pass; frontend 11 pass; batch/controlled Java/restart/resource/browser checks pass; standalone matrix pass | cc7d18fb31d3e53598be2a6db097bbb6417379a4 / origin main verified | Started authorized Stage 5 feasibility study |
 | 2026-11-17 | 5 | Explicit feasibility-only requirements: no camera, 1-10 at 1080p/15 FPS, LAN/RTSP; no implementation | Feasibility plan, local readiness evidence and tracker only | Local FFmpeg fixture open/read and capability checks pass; arithmetic/links pass; no network-camera tests | 564f5a4 / origin main verified after approval | Stage 6 approved; obtain selected paper; live implementation remains unapproved |
-| 2026-11-17 | 6 | Approved continuation; selected full PDF supplied | Paper alignment, references and tracker; no runtime changes | Six pages, figures/tables, links/arithmetic/source checks passed | Local review; publication pending | Approve publication and Stage 7 plan |
+| 2026-11-17 | 6 | Approved continuation; selected full PDF supplied | Paper alignment, references and tracker; no runtime changes | Six pages, figures/tables, links/arithmetic/source checks passed | 1008c5a784dc1b8e2466f64057b2b9d914ff5565 / origin main verified | Stage 7 plan subsequently approved |
 
 ## Stage 6 - selected reference-paper alignment
 - Approval: user approved Stage 6 after Stage 5 publication, requested continuation, and supplied the complete selected PDF on 2026-11-17. Stage 5 is published as 564f5a4 with origin/main verified.
@@ -227,5 +227,34 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 - Alignment: project implements local YOLO26n/ByteTrack, finite report-derived workloads and fixed cloud/edge mappings, rather than YOLOv8n optimization or adaptive priority scheduling. Multiple recordings and matched retained experiments are project extensions, not evidence of novel algorithms or superiority. Worse project full-loop/energy outcomes remain visible.
 - Checks/results: all six pages text-reviewed and visually inspected; 24 relative links in research files resolve; 310-to-78 arithmetic checked as 74.84%; illustrative 225/290 chart estimate implies about 22.41%, not a precise chart measurement. Source module names, local detector/profile and Stage 3 evidence cross-checked. Whitespace/scope checks passed; historical cloud/edge hashes unchanged. Initial page-6 console encoding failure resolved by UTF-8 extraction. No application tests rerun for docs only; browser not applicable.
 - Limits: supplied PDF lacks complete numerical model/code/optimized weights/repeat design; no exact replication or cross-paper speedup possible. Bibliography checked against PDF/metadata, not independently against publisher. Legacy latency-unit issue unresolved; no new hardware/live/accuracy/performance benchmark. Document content treated as evidence, not instructions.
-- Git review: three docs prepared for review; proposed message Align EdgeVision with the selected edge video analytics paper. No Stage 6 commit/push before approval. Stage 7 remains unapproved and has not started.
+- Git review: three docs prepared for review; proposed message Align EdgeVision with the selected edge video analytics paper. Stage 6 published after user approval as 1008c5a784dc1b8e2466f64057b2b9d914ff5565; origin/main verified. Stage 7 transition approved; concrete plan prepared before execution.
 - Remaining work: approve publication and a concrete Stage 7 evaluation plan including latency-unit compatibility, datasets/profiles, repetitions, sensitivity and measurement boundaries. Live implementation remains outside scope.
+
+
+## Stage 7 - concrete evaluation plan prepared
+- User approved Stage 6 commit/push and moving to Stage 7. Published Stage 6 as 1008c5a784dc1b8e2466f64057b2b9d914ff5565; local/remote main match.
+- Read-only inspection covered existing experiment runner/analyzer, Java output and profile contracts, video CLI and multi-recording integration. No new experiment or application implementation started.
+- Proposed scope: research/STAGE7_EVALUATION_PLAN.md defines six synthetic counts, two analyzed synthetic clips and 2/5/10-source replicated recording profiles; five pairs/case (110 measured scenarios) plus an excluded warm-up pair. No real-camera/accuracy claim.
+- Compatibility choice for approval: evaluation exports explicitly label raw simulator units; preserve legacy application keys/values and defer runtime dashboard unit correction to Stage 8. This avoids silently changing historical result semantics.
+- Planned checks/deliverables: strict matched profiles/counts/timing/horizons, evaluator failure tests, raw evidence and hashes, descriptive summaries/CSV/plots and independent audit. Synthetic fixtures only; energy comparisons must disclose horizons.
+- Files changed: plan and this tracker only; both local for review. Tests: whitespace check only; no new performance results, browser or application tests claimed. Stages 8-9 remain unapproved.
+- Next action: obtain approval of this concrete plan before execution, as required by handover Section 6 Rule 3 and Section 10.
+
+
+## Stage 7 - completed evaluation
+- Approval: user answered ok to the concrete 11-case plan, then go on during execution. Stage 6 commit 1008c5a784dc1b8e2466f64057b2b9d914ff5565 was already verified on origin/main. Stage 8 is not approved.
+- Status/objective: completed locally. Evaluated six synthetic source counts, two single analyzed clips and 2/5/10 logical sources from alternating clip-profile copies. Five measured pairs per case: 110 measured fresh-JVM simulations plus one excluded warm-up pair (112 completed scenarios in the final run).
+- Implementation: added stage7_evaluation.py and focused tests; reused existing Stage 3 validation/statistics, existing local YOLO26n/ByteTrack CLI and unchanged production Java. Isolated copied settings/weights and generated artifacts under new ignored results/experiments/stage7-2026-11-17-verified. Automatic weight downloads disabled only in that isolated configuration; originals unchanged. Single clip reports/profiles remain available there; replicated logical sources do not imply distinct real cameras or new inference.
+- Evidence: simulation/experiments/STAGE7_EVALUATION.md; evidence/stage7-2026-11-17/{raw.json,summary.json,summary.csv,virtual.png,recordings.png,export-manifest.json}. Updated approved plan and simulation README. New evidence about 1 MB, excludes generated video/model files. Raw input profiles are embedded, original-byte and canonical LF source hashes retained; exported raw only normalizes CRLF to LF with parsed values unchanged.
+- Tests/results: production Java build passed; all 55 measured pairs matched input/count/horizon and all recording-source timing/count checks. Fourteen evaluator/reference tests passed (six existing, eight new); controlled Java profile checks passed assumption/batching preservation, nine invalid-profile rejections and ten-source exact shares. Independent audit checked 176 statistical groups, 176 CSV rows, all signed comparisons and source/raw/profile hashes. All 22 case/scenario modeled metrics exactly repeated. Both plots visually verified; exported plots match original reviewed bytes. All 60 modeled synthetic means exactly match Stage 3; wall-clock runtimes vary and are kept separate.
+- Findings: synthetic detector arrival 62.55-69.31% lower for edge, full loop 17.72-49.68% higher, traffic 48.75% lower; energy includes the existing two-camera +0.502% regression. Recording-derived cases: detector arrival 79.66-91.93% lower, full loop 6.22-24.02% higher and energy 0.89-2.80% higher for edge; traffic 48.75% lower. These are simulator findings, not physical performance or paper reproduction.
+- Timing/assumptions: raw simulator latency units retained despite legacy Ms keys; UI correction deferred to Stage 8. Existing analyzer/detector/storage demands are 1000/2000/500 MI. Ten-source recording horizon is 2023 versus 2000 in other cases; each pair matches and cross-case energy attribution is qualified. CPU-only video processing measured once: A 20 frames at 10 FPS, 2.7827 s loop (7.187 processing FPS); B 12 frames at 4 FPS, 2.2327 s loop (5.375 processing FPS); model-load and external CLI times separately recorded. No repeated inference benchmark.
+- Preliminary failures resolved: first evaluator run incorrectly expected detector 1000 MI; actual existing default is 2000. Fixed evaluator, added assumption/horizon checks/tests and reran into a new directory. Failed attempt retained separately and excluded. Independent audit initially reconstructed Windows profile hash bytes with LF; corrected to original bytes/parsed equality. No production change or unresolved executed-check failure.
+- Preservation/browser: no application source/config change; original standalone cloud/edge SHA-256 hashes match prior baseline. No historical job/profile deletion. Browser not applicable because no runtime/UI change; original application suites not unnecessarily rerun. Local evaluation processes ended; no service/camera connection started.
+- Limits: two 160x120 moving-shape clips, not labeled CCTV or 1080p live inputs; no accuracy, real-time capacity, physical energy, hardware calibration, sensitivity sweep or causal energy attribution. Default regions empty, so no region-rule evaluation or safety claim. Pipeline measurements and model-derived demand assumptions remain distinct.
+- Files changed: evaluator/tests/report, six reviewed evidence files, research/STAGE7_EVALUATION_PLAN.md, simulation/README.md and this tracker (12 files total).
+- Git: changes prepared for review; proposed commit Evaluate synthetic and recording-derived cloud-edge workloads. Commit/push pending user approval. Next: approve publication and the concrete Stage 8 dashboard-quality/unit-compatibility plan before implementation.
+
+| Date | Stage | Approval | Changes | Checks | Commit/push | Next action |
+|---|---|---|---|---|---|---|
+| 2026-11-17 | 7 | Explicit ok to concrete plan; go on continued active work | Evaluator/tests/report and reviewed evidence; no runtime changes | 112 final scenarios, 14 tests, controlled Java, 176-group audit and plot review passed | Local review; publication pending | Approve publication and Stage 8 plan |

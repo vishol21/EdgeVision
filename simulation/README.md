@@ -101,3 +101,7 @@ The original standalone commands remain available and retain their original path
 .\simulation\run.ps1 -Scenario cloud
 .\simulation\run.ps1 -Scenario edge
 ```
+
+## Stage 7 final evaluation
+
+See [the Stage 7 report](experiments/STAGE7_EVALUATION.md) for the approved 11-case evaluation: 110 measured cloud/edge simulations, two excluded warm-ups, local synthetic-clip analysis, independent recording profiles, explicit metric units and retained raw/CSV/plot evidence. The evaluator leaves production outputs and legacy result keys unchanged.

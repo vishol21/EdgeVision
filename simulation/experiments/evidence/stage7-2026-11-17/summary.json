@@ -1,0 +1,1594 @@
+{
+  "schemaVersion": 1,
+  "repetitions": 5,
+  "units": {
+    "loopLatencyMs": "raw_CloudSim_time_units",
+    "analyticsLatencyMs": "raw_CloudSim_time_units",
+    "networkUsageMb": "decimal_MB",
+    "energyJoules": "model_J",
+    "processedTuples": "tuple_arrivals",
+    "wallClockMillis": "wall_clock_ms",
+    "driverWallClockMillis": "wall_clock_ms",
+    "simulationTimeSeconds": "raw_CloudSim_time_units"
+  },
+  "rows": [
+    {
+      "caseId": "virtual-1",
+      "family": "virtual",
+      "cameraCount": 1,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 246.59746904761903,
+          "sampleStddev": 0.0,
+          "minimum": 246.59746904761903,
+          "maximum": 246.59746904761903
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 245.63528333333332,
+          "sampleStddev": 0.0,
+          "minimum": 245.63528333333332,
+          "maximum": 245.63528333333332
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 6.0,
+          "sampleStddev": 0.0,
+          "minimum": 6.0,
+          "maximum": 6.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3096184.4953571423,
+          "sampleStddev": 0.0,
+          "minimum": 3096184.4953571423,
+          "maximum": 3096184.4953571423
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 150,
+          "sampleStddev": 0.0,
+          "minimum": 150,
+          "maximum": 150
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 159.8,
+          "sampleStddev": 13.627178724886527,
+          "minimum": 146,
+          "maximum": 180
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 371.11566002713516,
+          "sampleStddev": 21.462650073973624,
+          "minimum": 346.4984000311233,
+          "maximum": 397.88770000450313
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-1",
+      "family": "virtual",
+      "cameraCount": 1,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 290.29341904761924,
+          "sampleStddev": 0.0,
+          "minimum": 290.29341904761924,
+          "maximum": 290.29341904761924
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 75.39772380952381,
+          "sampleStddev": 0.0,
+          "minimum": 75.39772380952381,
+          "maximum": 75.39772380952381
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 3.075,
+          "sampleStddev": 0.0,
+          "minimum": 3.075,
+          "maximum": 3.075
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3093864.866099721,
+          "sampleStddev": 0.0,
+          "minimum": 3093864.866099721,
+          "maximum": 3093864.866099721
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 150,
+          "sampleStddev": 0.0,
+          "minimum": 150,
+          "maximum": 150
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 156,
+          "sampleStddev": 14.949916387726054,
+          "minimum": 144,
+          "maximum": 178
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 358.7843199959025,
+          "sampleStddev": 25.58995955242272,
+          "minimum": 337.34070003265515,
+          "maximum": 393.0036999518052
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-2",
+      "family": "virtual",
+      "cameraCount": 2,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 245.63691488095245,
+          "sampleStddev": 0.0,
+          "minimum": 245.63691488095245,
+          "maximum": 245.63691488095245
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 244.63436845238098,
+          "sampleStddev": 0.0,
+          "minimum": 244.63436845238098,
+          "maximum": 244.63436845238098
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 12.0,
+          "sampleStddev": 0.0,
+          "minimum": 12.0,
+          "maximum": 12.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3099007.644999999,
+          "sampleStddev": 0.0,
+          "minimum": 3099007.644999999,
+          "maximum": 3099007.644999999
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 300,
+          "sampleStddev": 0.0,
+          "minimum": 300,
+          "maximum": 300
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 194.6,
+          "sampleStddev": 15.436968614336172,
+          "minimum": 183,
+          "maximum": 221
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 401.7414400121197,
+          "sampleStddev": 23.79479478073461,
+          "minimum": 381.11910002771765,
+          "maximum": 442.9340999922715
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-2",
+      "family": "virtual",
+      "cameraCount": 2,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 290.2934190476192,
+          "sampleStddev": 0.0,
+          "minimum": 290.2934190476192,
+          "maximum": 290.2934190476192
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 75.39772380952385,
+          "sampleStddev": 0.0,
+          "minimum": 75.39772380952385,
+          "maximum": 75.39772380952385
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 6.15,
+          "sampleStddev": 0.0,
+          "minimum": 6.15,
+          "maximum": 6.15
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3114566.4528415725,
+          "sampleStddev": 0.0,
+          "minimum": 3114566.4528415725,
+          "maximum": 3114566.4528415725
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 300,
+          "sampleStddev": 0.0,
+          "minimum": 300,
+          "maximum": 300
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 196.4,
+          "sampleStddev": 18.22909761891685,
+          "minimum": 180,
+          "maximum": 220
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 399.2919799871743,
+          "sampleStddev": 23.24165670461849,
+          "minimum": 377.21499998588115,
+          "maximum": 432.92479997035116
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-3",
+      "family": "virtual",
+      "cameraCount": 3,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 345.946215079365,
+          "sampleStddev": 0.0,
+          "minimum": 345.946215079365,
+          "maximum": 345.946215079365
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 344.9465009259258,
+          "sampleStddev": 0.0,
+          "minimum": 344.9465009259258,
+          "maximum": 344.9465009259258
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 18.0,
+          "sampleStddev": 0.0,
+          "minimum": 18.0,
+          "maximum": 18.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3193554.8449999965,
+          "sampleStddev": 0.0,
+          "minimum": 3193554.8449999965,
+          "maximum": 3193554.8449999965
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 450,
+          "sampleStddev": 0.0,
+          "minimum": 450,
+          "maximum": 450
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 233.2,
+          "sampleStddev": 10.2810505299799,
+          "minimum": 219,
+          "maximum": 244
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 448.4457599930465,
+          "sampleStddev": 29.658195529114774,
+          "minimum": 415.5612000031397,
+          "maximum": 490.59040000429377
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-3",
+      "family": "virtual",
+      "cameraCount": 3,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 458.1397714285699,
+          "sampleStddev": 0.0,
+          "minimum": 458.1397714285699,
+          "maximum": 458.1397714285699
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 116.0194984126985,
+          "sampleStddev": 0.0,
+          "minimum": 116.0194984126985,
+          "maximum": 116.0194984126985
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 9.225,
+          "sampleStddev": 0.0,
+          "minimum": 9.225,
+          "maximum": 9.225
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3095936.513925993,
+          "sampleStddev": 0.0,
+          "minimum": 3095936.513925993,
+          "maximum": 3095936.513925993
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 450,
+          "sampleStddev": 0.0,
+          "minimum": 450,
+          "maximum": 450
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 246.2,
+          "sampleStddev": 15.449919093639293,
+          "minimum": 235,
+          "maximum": 272
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 447.52034000121057,
+          "sampleStddev": 18.826513611961047,
+          "minimum": 426.3259999570437,
+          "maximum": 476.2448000255972
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-5",
+      "family": "virtual",
+      "cameraCount": 5,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 488.5443478591358,
+          "sampleStddev": 0.0,
+          "minimum": 488.5443478591358,
+          "maximum": 488.5443478591358
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 486.52563654861547,
+          "sampleStddev": 0.0,
+          "minimum": 486.52563654861547,
+          "maximum": 486.52563654861547
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 30.0,
+          "sampleStddev": 0.0,
+          "minimum": 30.0,
+          "maximum": 30.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3292201.891307602,
+          "sampleStddev": 0.0,
+          "minimum": 3292201.891307602,
+          "maximum": 3292201.891307602
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 750,
+          "sampleStddev": 0.0,
+          "minimum": 750,
+          "maximum": 750
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 286.6,
+          "sampleStddev": 35.07563256735365,
+          "minimum": 265,
+          "maximum": 349
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 494.2640999914147,
+          "sampleStddev": 36.216879766014465,
+          "minimum": 455.9261999675073,
+          "maximum": 552.9836999485269
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-5",
+      "family": "virtual",
+      "cameraCount": 5,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 609.2123923809517,
+          "sampleStddev": 0.0,
+          "minimum": 609.2123923809517,
+          "maximum": 609.2123923809517
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 179.946838095238,
+          "sampleStddev": 0.0,
+          "minimum": 179.946838095238,
+          "maximum": 179.946838095238
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 15.375,
+          "sampleStddev": 0.0,
+          "minimum": 15.375,
+          "maximum": 15.375
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3095947.2573991935,
+          "sampleStddev": 0.0,
+          "minimum": 3095947.2573991935,
+          "maximum": 3095947.2573991935
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 750,
+          "sampleStddev": 0.0,
+          "minimum": 750,
+          "maximum": 750
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 366.2,
+          "sampleStddev": 10.986355173577815,
+          "minimum": 355,
+          "maximum": 384
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 571.0455399937928,
+          "sampleStddev": 10.81032858293358,
+          "minimum": 554.6623999834992,
+          "maximum": 581.542800005991
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-6",
+      "family": "virtual",
+      "cameraCount": 6,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 548.5655971627286,
+          "sampleStddev": 0.0,
+          "minimum": 548.5655971627286,
+          "maximum": 548.5655971627286
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 546.5320494742215,
+          "sampleStddev": 0.0,
+          "minimum": 546.5320494742215,
+          "maximum": 546.5320494742215
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 36.0,
+          "sampleStddev": 0.0,
+          "minimum": 36.0,
+          "maximum": 36.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3295374.578567561,
+          "sampleStddev": 0.0,
+          "minimum": 3295374.578567561,
+          "maximum": 3295374.578567561
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 900,
+          "sampleStddev": 0.0,
+          "minimum": 900,
+          "maximum": 900
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 318.4,
+          "sampleStddev": 40.93042877859943,
+          "minimum": 281,
+          "maximum": 388
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 536.2785200006329,
+          "sampleStddev": 49.25426906334684,
+          "minimum": 490.00140000134706,
+          "maximum": 618.9541000057943
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-6",
+      "family": "virtual",
+      "cameraCount": 6,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 704.7977301587266,
+          "sampleStddev": 0.0,
+          "minimum": 704.7977301587266,
+          "maximum": 704.7977301587266
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 202.62097142857124,
+          "sampleStddev": 0.0,
+          "minimum": 202.62097142857124,
+          "maximum": 202.62097142857124
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 18.45,
+          "sampleStddev": 0.0,
+          "minimum": 18.45,
+          "maximum": 18.45
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3098034.7842758,
+          "sampleStddev": 0.0,
+          "minimum": 3098034.7842758,
+          "maximum": 3098034.7842758
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 900,
+          "sampleStddev": 0.0,
+          "minimum": 900,
+          "maximum": 900
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 426.8,
+          "sampleStddev": 65.86880900699511,
+          "minimum": 379,
+          "maximum": 543
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 637.1056400123052,
+          "sampleStddev": 71.01039127706238,
+          "minimum": 579.4560000067577,
+          "maximum": 759.2162000364624
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-10",
+      "family": "virtual",
+      "cameraCount": 10,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 848.5171047638983,
+          "sampleStddev": 0.0,
+          "minimum": 848.5171047638983,
+          "maximum": 848.5171047638983
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 846.5105189295679,
+          "sampleStddev": 0.0,
+          "minimum": 846.5105189295679,
+          "maximum": 846.5105189295679
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 60.0,
+          "sampleStddev": 0.0,
+          "minimum": 60.0,
+          "maximum": 60.0
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3484965.051307602,
+          "sampleStddev": 0.0,
+          "minimum": 3484965.051307602,
+          "maximum": 3484965.051307602
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 1500,
+          "sampleStddev": 0.0,
+          "minimum": 1500,
+          "maximum": 1500
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 414.4,
+          "sampleStddev": 54.98454328263535,
+          "minimum": 348,
+          "maximum": 474
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 655.7110199937597,
+          "sampleStddev": 96.62429085954655,
+          "minimum": 552.8488000272773,
+          "maximum": 775.9579999838024
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "virtual-10",
+      "family": "virtual",
+      "cameraCount": 10,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 1270.0472304761913,
+          "sampleStddev": 0.0,
+          "minimum": 1270.0472304761913,
+          "maximum": 1270.0472304761913
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 317.01428571428573,
+          "sampleStddev": 0.0,
+          "minimum": 317.01428571428573,
+          "maximum": 317.01428571428573
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 30.75,
+          "sampleStddev": 0.0,
+          "minimum": 30.75,
+          "maximum": 30.75
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3157215.608498777,
+          "sampleStddev": 0.0,
+          "minimum": 3157215.608498777,
+          "maximum": 3157215.608498777
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 1500,
+          "sampleStddev": 0.0,
+          "minimum": 1500,
+          "maximum": 1500
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 733.6,
+          "sampleStddev": 108.32266614148675,
+          "minimum": 572,
+          "maximum": 829
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 952.0423999987543,
+          "sampleStddev": 115.5040968140998,
+          "minimum": 778.9727000053972,
+          "maximum": 1044.3786000250839
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "clip-a",
+      "family": "single",
+      "cameraCount": 1,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 123.01833928571428,
+          "sampleStddev": 0.0,
+          "minimum": 123.01833928571428,
+          "maximum": 123.01833928571428
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 122.30194642857143,
+          "sampleStddev": 0.0,
+          "minimum": 122.30194642857143,
+          "maximum": 122.30194642857143
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 0.8,
+          "sampleStddev": 0.0,
+          "minimum": 0.8,
+          "maximum": 0.8
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3014229.8953571427,
+          "sampleStddev": 0.0,
+          "minimum": 3014229.8953571427,
+          "maximum": 3014229.8953571427
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 20,
+          "sampleStddev": 0.0,
+          "minimum": 20,
+          "maximum": 20
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 94.8,
+          "sampleStddev": 19.070920271449932,
+          "minimum": 79,
+          "maximum": 128
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 318.420959985815,
+          "sampleStddev": 33.70517776191118,
+          "minimum": 265.3920999728143,
+          "maximum": 359.2467999551445
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "clip-a",
+      "family": "single",
+      "cameraCount": 1,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 130.67321428571424,
+          "sampleStddev": 0.0,
+          "minimum": 130.67321428571424,
+          "maximum": 130.67321428571424
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 10.249214285714286,
+          "sampleStddev": 0.0,
+          "minimum": 10.249214285714286,
+          "maximum": 10.249214285714286
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 0.41,
+          "sampleStddev": 0.0,
+          "minimum": 0.41,
+          "maximum": 0.41
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3096965.961977388,
+          "sampleStddev": 0.0,
+          "minimum": 3096965.961977388,
+          "maximum": 3096965.961977388
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 20,
+          "sampleStddev": 0.0,
+          "minimum": 20,
+          "maximum": 20
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 85,
+          "sampleStddev": 5.744562646538029,
+          "minimum": 76,
+          "maximum": 90
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 302.43414000142366,
+          "sampleStddev": 13.828745933997087,
+          "minimum": 286.97159996954724,
+          "maximum": 323.68099997984245
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "clip-b",
+      "family": "single",
+      "cameraCount": 1,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 114.53247023809524,
+          "sampleStddev": 0.0,
+          "minimum": 114.53247023809524,
+          "maximum": 114.53247023809524
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 114.0051488095238,
+          "sampleStddev": 0.0,
+          "minimum": 114.0051488095238,
+          "maximum": 114.0051488095238
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 0.48,
+          "sampleStddev": 0.0,
+          "minimum": 0.48,
+          "maximum": 0.48
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3009186.5353571423,
+          "sampleStddev": 0.0,
+          "minimum": 3009186.5353571423,
+          "maximum": 3009186.5353571423
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 12,
+          "sampleStddev": 0.0,
+          "minimum": 12,
+          "maximum": 12
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 85.2,
+          "sampleStddev": 5.974947698515862,
+          "minimum": 79,
+          "maximum": 94
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 303.0997599940747,
+          "sampleStddev": 7.495875187168399,
+          "minimum": 296.21339996811,
+          "maximum": 311.76179996691644
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "clip-b",
+      "family": "single",
+      "cameraCount": 1,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 123.75999999999999,
+          "sampleStddev": 0.0,
+          "minimum": 123.75999999999999,
+          "maximum": 123.75999999999999
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 9.202142857142858,
+          "sampleStddev": 0.0,
+          "minimum": 9.202142857142858,
+          "maximum": 9.202142857142858
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 0.246,
+          "sampleStddev": 0.0,
+          "minimum": 0.246,
+          "maximum": 0.246
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3093337.611188857,
+          "sampleStddev": 0.0,
+          "minimum": 3093337.611188857,
+          "maximum": 3093337.611188857
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 12,
+          "sampleStddev": 0.0,
+          "minimum": 12,
+          "maximum": 12
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 82.4,
+          "sampleStddev": 7.197221686178633,
+          "minimum": 71,
+          "maximum": 89
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 300.3445400041528,
+          "sampleStddev": 27.264498174332523,
+          "minimum": 279.02780001750216,
+          "maximum": 346.8159000040032
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-2",
+      "family": "recordings",
+      "cameraCount": 2,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 120.25835379464286,
+          "sampleStddev": 0.0,
+          "minimum": 120.25835379464286,
+          "maximum": 120.25835379464286
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 118.95026785714286,
+          "sampleStddev": 0.0,
+          "minimum": 118.95026785714286,
+          "maximum": 118.95026785714286
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 1.28,
+          "sampleStddev": 0.0,
+          "minimum": 1.28,
+          "maximum": 1.28
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3017293.2049999996,
+          "sampleStddev": 0.0,
+          "minimum": 3017293.2049999996,
+          "maximum": 3017293.2049999996
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 32,
+          "sampleStddev": 0.0,
+          "minimum": 32,
+          "maximum": 32
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 105,
+          "sampleStddev": 4.47213595499958,
+          "minimum": 99,
+          "maximum": 111
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 318.8056999933906,
+          "sampleStddev": 12.86070595467003,
+          "minimum": 298.4193000011146,
+          "maximum": 331.04660001117736
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-2",
+      "family": "recordings",
+      "cameraCount": 2,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 128.08075892857144,
+          "sampleStddev": 0.0,
+          "minimum": 128.08075892857144,
+          "maximum": 128.08075892857144
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 9.856562500000003,
+          "sampleStddev": 0.0,
+          "minimum": 9.856562500000003,
+          "maximum": 9.856562500000003
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 0.656,
+          "sampleStddev": 0.0,
+          "minimum": 0.656,
+          "maximum": 0.656
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3091967.247911142,
+          "sampleStddev": 0.0,
+          "minimum": 3091967.247911142,
+          "maximum": 3091967.247911142
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 32,
+          "sampleStddev": 0.0,
+          "minimum": 32,
+          "maximum": 32
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 107,
+          "sampleStddev": 8.276472678623424,
+          "minimum": 99,
+          "maximum": 119
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 323.56733998749405,
+          "sampleStddev": 30.85122313855679,
+          "minimum": 298.08609996689484,
+          "maximum": 372.86930001573637
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-5",
+      "family": "recordings",
+      "cameraCount": 5,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 152.84042729591835,
+          "sampleStddev": 0.0,
+          "minimum": 152.84042729591835,
+          "maximum": 152.84042729591835
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 151.7025,
+          "sampleStddev": 0.0,
+          "minimum": 151.7025,
+          "maximum": 151.7025
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 3.36,
+          "sampleStddev": 0.0,
+          "minimum": 3.36,
+          "maximum": 3.36
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3042528.965,
+          "sampleStddev": 0.0,
+          "minimum": 3042528.965,
+          "maximum": 3042528.965
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 84,
+          "sampleStddev": 0.0,
+          "minimum": 84,
+          "maximum": 84
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 142,
+          "sampleStddev": 15.033296378372908,
+          "minimum": 122,
+          "maximum": 162
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 376.6131600015797,
+          "sampleStddev": 30.569308744730552,
+          "minimum": 347.4567999946885,
+          "maximum": 422.8474000119604
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-5",
+      "family": "recordings",
+      "cameraCount": 5,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 165.57289115646256,
+          "sampleStddev": 0.0,
+          "minimum": 165.57289115646256,
+          "maximum": 165.57289115646256
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 23.917687074829928,
+          "sampleStddev": 0.0,
+          "minimum": 23.917687074829928,
+          "maximum": 23.917687074829928
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 1.722,
+          "sampleStddev": 0.0,
+          "minimum": 1.722,
+          "maximum": 1.722
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3093437.574247,
+          "sampleStddev": 0.0,
+          "minimum": 3093437.574247,
+          "maximum": 3093437.574247
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 84,
+          "sampleStddev": 0.0,
+          "minimum": 84,
+          "maximum": 84
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 146.8,
+          "sampleStddev": 26.864474683120086,
+          "minimum": 125,
+          "maximum": 191
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 380.2806800114922,
+          "sampleStddev": 43.726692096683195,
+          "minimum": 345.83780000684783,
+          "maximum": 453.0454000341706
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2000.0,
+          "sampleStddev": 0.0,
+          "minimum": 2000.0,
+          "maximum": 2000.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-10",
+      "family": "recordings",
+      "cameraCount": 10,
+      "scenario": "cloud",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 188.05506361607138,
+          "sampleStddev": 0.0,
+          "minimum": 188.05506361607138,
+          "maximum": 188.05506361607138
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 186.95026785714282,
+          "sampleStddev": 0.0,
+          "minimum": 186.95026785714282,
+          "maximum": 186.95026785714282
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 6.4,
+          "sampleStddev": 0.0,
+          "minimum": 6.4,
+          "maximum": 6.4
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3067802.645000001,
+          "sampleStddev": 0.0,
+          "minimum": 3067802.645000001,
+          "maximum": 3067802.645000001
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 160,
+          "sampleStddev": 0.0,
+          "minimum": 160,
+          "maximum": 160
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 179.4,
+          "sampleStddev": 12.895735729302148,
+          "minimum": 163,
+          "maximum": 198
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 404.1239999816753,
+          "sampleStddev": 17.834375981997724,
+          "minimum": 379.70679998397827,
+          "maximum": 421.72779998509213
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2023.0,
+          "sampleStddev": 0.0,
+          "minimum": 2023.0,
+          "maximum": 2023.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    },
+    {
+      "caseId": "recordings-10",
+      "family": "recordings",
+      "cameraCount": 10,
+      "scenario": "edge",
+      "statistics": {
+        "loopLatencyMs": {
+          "n": 5,
+          "mean": 233.22611607142875,
+          "sampleStddev": 0.0,
+          "minimum": 233.22611607142875,
+          "maximum": 233.22611607142875
+        },
+        "analyticsLatencyMs": {
+          "n": 5,
+          "mean": 38.024419642857154,
+          "sampleStddev": 0.0,
+          "minimum": 38.024419642857154,
+          "maximum": 38.024419642857154
+        },
+        "networkUsageMb": {
+          "n": 5,
+          "mean": 3.28,
+          "sampleStddev": 0.0,
+          "minimum": 3.28,
+          "maximum": 3.28
+        },
+        "energyJoules": {
+          "n": 5,
+          "mean": 3095120.043620331,
+          "sampleStddev": 0.0,
+          "minimum": 3095120.043620331,
+          "maximum": 3095120.043620331
+        },
+        "processedTuples": {
+          "n": 5,
+          "mean": 160,
+          "sampleStddev": 0.0,
+          "minimum": 160,
+          "maximum": 160
+        },
+        "wallClockMillis": {
+          "n": 5,
+          "mean": 176,
+          "sampleStddev": 14.696938456699069,
+          "minimum": 162,
+          "maximum": 194
+        },
+        "driverWallClockMillis": {
+          "n": 5,
+          "mean": 402.78324000537395,
+          "sampleStddev": 30.36004840156408,
+          "minimum": 375.66389999119565,
+          "maximum": 437.55099998088554
+        },
+        "simulationTimeSeconds": {
+          "n": 5,
+          "mean": 2023.0,
+          "sampleStddev": 0.0,
+          "minimum": 2023.0,
+          "maximum": 2023.0
+        }
+      },
+      "modeledMetricsExactlyRepeated": true
+    }
+  ],
+  "comparisons": [
+    {
+      "caseId": "virtual-1",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 17.719545204076013,
+        "analyticsLatencyMs": -69.30501075156734,
+        "networkUsageMb": -48.75,
+        "energyJoules": -0.07491896109226875,
+        "processedTuples": 0.0,
+        "wallClockMillis": -2.3779724655819843,
+        "driverWallClockMillis": -3.3227754469674076,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "virtual-2",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 18.1798831777013,
+        "analyticsLatencyMs": -69.17942303589273,
+        "networkUsageMb": -48.75,
+        "energyJoules": 0.5020577431190358,
+        "processedTuples": 0.0,
+        "wallClockMillis": 0.9249743062692761,
+        "driverWallClockMillis": -0.6097105702791186,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "virtual-3",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 32.430924652106995,
+        "analyticsLatencyMs": -66.36594425475484,
+        "networkUsageMb": -48.75,
+        "energyJoules": -3.0567294382571877,
+        "processedTuples": 0.0,
+        "wallClockMillis": 5.5746140651801035,
+        "driverWallClockMillis": -0.20636163264210616,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "virtual-5",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 24.699506820741806,
+        "analyticsLatencyMs": -63.013904185651874,
+        "networkUsageMb": -48.75,
+        "energyJoules": -5.961196803470031,
+        "processedTuples": 0.0,
+        "wallClockMillis": 27.773900907187702,
+        "driverWallClockMillis": 15.534496639288946,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "virtual-6",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 28.480118659291836,
+        "analyticsLatencyMs": -62.926058659597714,
+        "networkUsageMb": -48.75,
+        "energyJoules": -5.988387346774435,
+        "processedTuples": 0.0,
+        "wallClockMillis": 34.04522613065328,
+        "driverWallClockMillis": 18.8012602129866,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "virtual-10",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 49.67844765245891,
+        "analyticsLatencyMs": -62.55046114309865,
+        "networkUsageMb": -48.75,
+        "energyJoules": -9.404669429492541,
+        "processedTuples": 0.0,
+        "wallClockMillis": 77.02702702702705,
+        "driverWallClockMillis": 45.19237453227715,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "clip-a",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 6.222547828597534,
+        "analyticsLatencyMs": -91.61974556823574,
+        "networkUsageMb": -48.75000000000001,
+        "energyJoules": 2.7448492481507314,
+        "processedTuples": 0.0,
+        "wallClockMillis": -10.337552742616031,
+        "driverWallClockMillis": -5.020655670752174,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "clip-b",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 8.05669321784656,
+        "analyticsLatencyMs": -91.92830942002671,
+        "networkUsageMb": -48.75,
+        "energyJoules": 2.796472563031961,
+        "processedTuples": 0.0,
+        "wallClockMillis": -3.286384976525818,
+        "driverWallClockMillis": -0.9090142433553097,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "recordings-2",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 6.504666733827391,
+        "analyticsLatencyMs": -91.71371138748711,
+        "networkUsageMb": -48.75,
+        "energyJoules": 2.4748686268672584,
+        "processedTuples": 0.0,
+        "wallClockMillis": 1.9047619047619047,
+        "driverWallClockMillis": 1.4935868443387865,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "recordings-5",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 8.330560235802377,
+        "analyticsLatencyMs": -84.23382141043824,
+        "networkUsageMb": -48.75,
+        "energyJoules": 1.6732333474103822,
+        "processedTuples": 0.0,
+        "wallClockMillis": 3.380281690140853,
+        "driverWallClockMillis": 0.9738162123429694,
+        "simulationTimeSeconds": 0.0
+      }
+    },
+    {
+      "caseId": "recordings-10",
+      "edgeChangeVsCloudPercent": {
+        "loopLatencyMs": 24.02012027050624,
+        "analyticsLatencyMs": -79.66067656457528,
+        "networkUsageMb": -48.75000000000001,
+        "energyJoules": 0.8904548884476972,
+        "processedTuples": 0.0,
+        "wallClockMillis": -1.895206243032333,
+        "driverWallClockMillis": -0.3317694510502069,
+        "simulationTimeSeconds": 0.0
+      }
+    }
+  ],
+  "variationMeaning": "Descriptive sample standard deviation/min/max only; no significance claim.",
+  "comparisonMeaning": "100*(edge-cloud)/cloud; positive means larger, not better.",
+  "rawEvidenceSha256": "5ddd566c68af1554d58f41e9c466c5be2ccf166bcd947808afa3d07e45207dba"
+}
