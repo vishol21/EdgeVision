@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
-const { combineProfiles } = require('./multi-video');
-const root = path.resolve(__dirname, '..');
+const { combineProfiles } = require('../../server/multi-video');
+const root = path.resolve(__dirname, '../..');
 const id = () => randomUUID().replaceAll('-', '');
 const template = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const javaHome = process.env.JAVA_HOME && fs.existsSync(path.join(process.env.JAVA_HOME, 'bin/java.exe'))

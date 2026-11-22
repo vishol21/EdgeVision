@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const baseUrl = process.argv[2] || 'http://127.0.0.1:4173';
-const resultsDir = path.resolve(__dirname, '../results');
+const resultsDir = path.resolve(__dirname, '../../results');
 const outputPath = path.resolve(process.argv[3] || path.join(resultsDir, 'validation/camera-api.json'));
 const originals = new Map(['cloud', 'edge'].map(scenario => {
   const filename = path.join(resultsDir, `${scenario}.json`);

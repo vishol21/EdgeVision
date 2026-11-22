@@ -8,8 +8,8 @@ const { randomUUID } = require('node:crypto');
 const { Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
 
-const root = path.resolve(__dirname);
-const projectRoot = path.resolve(root, '..');
+const projectRoot = path.resolve(__dirname, '..');
+const root = path.join(projectRoot, 'frontend');
 const resultsRoot = path.join(projectRoot, 'results');
 const runScript = path.join(projectRoot, 'simulation', 'run.ps1');
 const videoRoot = path.join(projectRoot, 'video_analytics');

@@ -64,4 +64,4 @@ If Chart.js is unavailable, the dashboard notice explains that cards/table remai
 
 Say: "The prototype implements local uploaded-video analytics and reproducible placement simulations, including multiple recordings and validated recovery. Physical RTSP cameras, distributed YOLO execution, hardware calibration and labeled CCTV accuracy evaluation remain future work."
 
-Keep [viva notes](VIVA_GUIDE.md) and [evidence links](README.md#evidence-map) available for follow-up questions. Do not present the selected paper's gains as EdgeVision's own results.
+Keep [viva notes](VIVA_GUIDE.md) and [evidence links](../README.md#evidence-map) available for follow-up questions. Do not present the selected paper's gains as EdgeVision's own results.

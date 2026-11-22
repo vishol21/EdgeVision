@@ -78,7 +78,7 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
     URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
     setTimeout, console
   };
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'js/app.js'), 'utf8'), context);
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../frontend/js/app.js'), 'utf8'), context);
   return { get, buttons, calls, charts,
     run: action => get(`[data-run="${action}"]`).emit('click'),
     empty() {

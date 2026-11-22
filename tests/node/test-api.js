@@ -8,7 +8,7 @@ const path = require('node:path');
 const http = require('node:http');
 
 const baseUrl = process.argv[2] || 'http://127.0.0.1:4173';
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(__dirname, '../..');
 const fixturePath = path.join(projectRoot, 'video_analytics', 'tests', 'fixtures', 'synthetic_test_clip.avi');
 const resultsDir = path.join(projectRoot, 'results');
 const sourceResults = new Map(['cloud', 'edge'].map(scenario => [
@@ -227,7 +227,7 @@ async function main() {
   assert.match(indexAfter, /SIMULATION RUN TIME \(WALL CLOCK\)/);
   assert.match(indexAfter, /id="camera-count" type="range" min="1" max="10" step="1" value="5"/);
   assert.match(indexAfter, /100 ms for 15 seconds/);
-  const appSource = fs.readFileSync(path.join(__dirname, 'js', 'app.js'), 'utf8');
+  const appSource = fs.readFileSync(path.join(projectRoot, 'frontend', 'js', 'app.js'), 'utf8');
   assert.match(appSource, /Source video duration/);
   assert.match(appSource, /CAMERA_TUPLES_PER_SOURCE = CAMERA_DURATION_SECONDS \* 1000 \/ CAMERA_INTERVAL_MS/);
   assert.match(appSource, /count \* CAMERA_TUPLES_PER_SOURCE/);

@@ -37,7 +37,7 @@ The combined JSON uses `schemaVersion: 2`, `profileType: "multi_video"` and `agg
 
 Every camera has an independent finite Sensor and its own tuple count and interval. Cameras begin at the same simulated origin after CloudSim's startup offset; this is an experiment assumption, not a claim that the footage timestamps are synchronized. Unequal durations/FPS and per-camera frame batching are retained; there is no invented common FPS or round-robin redistribution of video tuples. The combined duration is the longest recording, not the sum of durations. Tuple counts sum the already rounded counts from each individual camera profile.
 
-Camera-specific tuple types carry identity through the existing three modules. Each profile's configured CPU estimates and payload assumption are preserved; otherwise the existing Java defaults apply. Result metadata records actual emissions, intervals, cloud-storage arrivals and CPU/payload values for each camera. A separate batch accumulator measures the combined application-loop average; it does not report a first-camera-only average. Exported legacy `*LatencyMs` values remain raw simulator time units for compatibility. Stage 8 corrected the dashboard labels/endpoints without converting those saved values; see the [metric contract](../simulation/README.md#metrics).
+Camera-specific tuple types carry identity through the existing three modules. Each profile's configured CPU estimates and payload assumption are preserved; otherwise the existing Java defaults apply. Result metadata records actual emissions, intervals, cloud-storage arrivals and CPU/payload values for each camera. A separate batch accumulator measures the combined application-loop average; it does not report a first-camera-only average. Exported legacy `*LatencyMs` values remain raw simulator time units for compatibility. Stage 8 corrected the dashboard labels/endpoints without converting those saved values; see the [metric contract](../README.md#metrics).
 
 Private storage:
 
@@ -74,7 +74,7 @@ Use a dedicated idle project copy/server with the pinned simulator built and Pyt
 
 ```powershell
 .\simulation\build.ps1
-node --test frontend/test-state.js frontend/test-multi-video-unit.js
+node --test tests/node/test-state.js tests/node/test-multi-video-unit.js
 Push-Location video_analytics
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 Pop-Location
@@ -83,8 +83,8 @@ Pop-Location
 Against the same dedicated server and from that copy's project root:
 
 ```powershell
-node frontend/test-api.js http://127.0.0.1:4176
-node frontend/test-multi-video.js http://127.0.0.1:4176
+node tests/node/test-api.js http://127.0.0.1:4176
+node tests/node/test-multi-video.js http://127.0.0.1:4176
 ```
 
 The multi-video test generates a second moving-shape fixture under ignored `tests/.runtime/` if needed. The first clip has 20 frames at 10 FPS (2 s), the second 12 frames at 4 FPS (3 s). It verifies 32 total tuples with independent 0.1/0.25 s intervals, partial/all failure, busy locks, limits and simulation-failure isolation. It temporarily holds `run.ps1` inside try/finally for the failure case; do not run concurrent tests/users against that copy. Test artifacts are retained and are not detection-accuracy evidence.
@@ -92,13 +92,13 @@ The multi-video test generates a second moving-shape fixture under ignored `test
 The test prints `RECOVERY_BATCH_ID`. Restart the dedicated server, then run:
 
 ```powershell
-node frontend/test-multi-video.js http://127.0.0.1:4176 --recover <batch-id>
+node tests/node/test-multi-video.js http://127.0.0.1:4176 --recover <batch-id>
 ```
 
 Controlled Java profile checks use the successful first camera's profile path from that batch:
 
 ```powershell
-node frontend/test-multi-profile.js video_analytics/outputs/workloads/<camera-job-id>.json
+node tests/node/test-multi-profile.js video_analytics/outputs/workloads/<camera-job-id>.json
 ```
 
 That test verifies different frame batches, intervals, test-only CPU estimates and payload assumptions, ten sources, and rejection of nine malformed profiles. Controlled CPU numbers are test inputs, not a claimed hardware calibration. No labeled real CCTV dataset or real-world detection/tracking accuracy was evaluated in this stage.

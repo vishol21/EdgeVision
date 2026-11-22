@@ -34,7 +34,7 @@ Pop-Location
 npm start
 ```
 
-The explicit Java version command assumes `JAVA_HOME` is set; if using the script's local fallback instead, invoke that actual JDK's java.exe to inspect its version. Review the existing [model setup/license notes](../video_analytics/README.md) before redistribution. Model files and virtual environments are intentionally absent from Git. Environment creation/install commands are fresh-machine instructions, not claims that a new installation was exercised during documentation work.
+The explicit Java version command assumes `JAVA_HOME` is set; if using the script's local fallback instead, invoke that actual JDK's java.exe to inspect its version. Review the existing [model setup/license notes](../README.md#python-environment-and-model-setup) before redistribution. Model files and virtual environments are intentionally absent from Git. Environment creation/install commands are fresh-machine instructions, not claims that a new installation was exercised during documentation work.
 
 Open [the local dashboard](http://127.0.0.1:4173). Use one server instance. Stop it with Ctrl+C in its terminal before restarting. If port 4173 is occupied, identify the existing server rather than stopping unrelated processes. The server binds locally; no router/firewall or camera-network changes are needed.
 
@@ -44,14 +44,14 @@ Open [the local dashboard](http://127.0.0.1:4173). Use one server instance. Stop
 - Single video: choose a supported local recording, start analysis, then wait for its paired simulations. Unsupported browser preview does not necessarily prevent Python decoding. Save the job ID if using the recovery APIs later.
 - Multiple recordings: choose 2-10 files; sequential local analysis creates independent reports. Successful profiles form a paired comparison. Save the batch ID; use the explicit recovery field after refresh/restart. Failed inputs remain excluded and visible.
 - [Settings](../video_analytics/config/settings.json) govern sampling, classes, rules, regions and limits. Defaults: 500 MiB/file, 1 GiB/batch and 100,000 combined tuples. Limits do not establish real-time capacity or bound all generated storage. Region rules are not evaluated with the default empty region list.
-- Full-loop and detector-arrival latency are raw simulator time units despite legacy API key names. Runtime is wall-clock milliseconds; video processing is separately reported in seconds/FPS. See [metric definitions](../simulation/README.md).
+- Full-loop and detector-arrival latency are raw simulator time units despite legacy API key names. Runtime is wall-clock milliseconds; video processing is separately reported in seconds/FPS. See [metric definitions](../README.md#metrics).
 
 ## Checks and experiment reproduction
 
 Quick frontend checks:
 
 ```powershell
-node --test frontend/test-state.js frontend/test-multi-video-unit.js
+node --test tests/node/test-state.js tests/node/test-multi-video-unit.js
 .\video_analytics\.venv\Scripts\python.exe -m unittest discover -s simulation/experiments -p "test*.py" -v
 ```
 
