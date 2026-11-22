@@ -99,7 +99,13 @@ function createMultiVideoApi(deps) {
       uniqueTrackBasis: 'sum_of_camera_scoped_ids_not_cross_camera_people', crossCameraReIdentification: false };
     for (const camera of batch.cameras.filter(camera => camera.status === 'completed')) {
       const job = await getVideoJob(camera.jobId);
-      const raw = JSON.parse(await fs.promises.readFile(path.join(outputsRoot, 'workloads', `${camera.jobId}.json`), 'utf8'));
+      let raw;
+      try {
+        const report = JSON.parse(await fs.promises.readFile(path.join(outputsRoot, camera.jobId, 'report.json'), 'utf8'));
+        await fs.promises.access(path.join(outputsRoot, camera.jobId, 'annotated.mp4'));
+        raw = JSON.parse(await fs.promises.readFile(path.join(outputsRoot, 'workloads', `${camera.jobId}.json`), 'utf8'));
+        if (report.jobId !== camera.jobId || report.status !== 'completed' || report.video?.processedFrameCount !== raw.video?.processedFrameCount) throw new Error('Invalid saved report.');
+      } catch { throw new Error(`Saved report, annotated video or workload profile for camera ${camera.cameraId} is missing or invalid.`); }
       if (!job?.report || job.analysisStatus !== 'completed' || !validWorkloadProfile(raw, camera.jobId) ||
           raw.video.processedFrameCount !== job.report.video.processedFrameCount || raw.iFogSimWorkload.virtualCameraSources !== 1) {
         throw new Error('A camera report/profile could not be validated for this batch.');
@@ -128,14 +134,21 @@ function createMultiVideoApi(deps) {
 
   async function getBatch(id) {
     if (!validId(id)) return null;
-    if (batches.has(id)) return batches.get(id);
+    const cached = batches.get(id);
+    if (cached && (activeBatches.has(id) || ['draft', 'processing', 'simulation_running'].includes(cached.status))) return cached;
     let batch;
-    try { batch = JSON.parse(await fs.promises.readFile(path.join(directory(id), 'batch.json'), 'utf8')); }
-    catch { return null; }
-    if (batch.batchId !== id || !Array.isArray(batch.cameras) || !batch.cameras.length || batch.cameras.length > maxCameras ||
+    if (!batch) {
+      try { batch = JSON.parse(await fs.promises.readFile(path.join(directory(id), 'batch.json'), 'utf8')); }
+      catch (error) {
+        if (error.code === 'ENOENT') return null;
+        throw httpError(409, 'The saved batch manifest is unreadable or invalid. Its files must be restored before recovery.');
+      }
+    }
+    if (!batch || batch.batchId !== id || !Array.isArray(batch.cameras) || !batch.cameras.length || batch.cameras.length > maxCameras ||
+        batch.cameras.some(camera => !camera || typeof camera !== 'object') ||
         new Set(batch.cameras.map(camera => camera.cameraId)).size !== batch.cameras.length ||
         batch.cameras.some(camera => !validId(camera.cameraId) || !filenameSafe(camera.filename) ||
-          (camera.jobId !== null && !validId(camera.jobId)))) return null;
+          (camera.jobId !== null && !validId(camera.jobId)))) throw httpError(409, 'The saved batch manifest has invalid camera or Job ID associations.');
     batch.cloud = null; batch.edge = null;
     if (['processing', 'simulation_running', 'draft'].includes(batch.status)) {
       batch.status = 'interrupted';
@@ -165,9 +178,13 @@ function createMultiVideoApi(deps) {
         if (batch.simulationStatus === 'completed') await readComparison(batch, combined);
       } catch (error) {
         batch.status = 'simulation_failed'; batch.simulationStatus = 'failed';
-        batch.error = safeError(error.message); batch.message = 'Camera analytics remain available; the saved comparison could not be validated.';
+        batch.error = safeError(error.message); batch.message = 'Saved batch artifacts could not be validated. Available camera reports can still be opened individually.';
         batch.cloud = null; batch.edge = null;
       }
+    } else if (['completed', 'partial_success'].includes(batch.status)) {
+      batch.status = 'simulation_failed'; batch.simulationStatus = 'failed';
+      batch.error = 'The saved completed batch has no combined workload profile. Restore its saved artifacts before recovery.';
+      batch.message = batch.error;
     }
     batches.set(id, batch);
     return batch;
@@ -260,7 +277,13 @@ function createMultiVideoApi(deps) {
       const match = pathname.match(/^\/api\/video\/batches\/([a-f0-9]{32})(?:\/(run|cameras)(?:\/([a-f0-9]{32}))?)?$/);
       if (!match) throw httpError(404, 'Batch endpoint not found.');
       const batch = await getBatch(match[1]);
-      if (!batch) throw httpError(404, 'Video batch not found.');
+      if (!batch) {
+        const job = await getVideoJob(match[1]);
+        if (job) throw httpError(404, job.batchId
+          ? `This is a camera Job ID. Use its parent Batch ID: ${job.batchId}.`
+          : 'This is a single-video Job ID, not a Batch ID. Use the Batch ID from Multiple camera recordings.');
+        throw httpError(404, 'No saved batch was found for this Batch ID in this project. Check the ID and use the same project/server where it was created.');
+      }
       if (request.method === 'GET' && !match[2]) { sendJson(response, 200, publicBatch(batch)); return; }
       if (request.method === 'POST' && match[2] === 'cameras' && match[3]) {
         const camera = batch.cameras.find(camera => camera.cameraId === match[3]);

@@ -36,7 +36,7 @@ The device capacities and linear power values follow the official `DCNSFog` devi
 
 ## Metrics
 
-Stage 3 adds [repeated multi-camera experiments and analysis](experiments/STAGE3_ANALYSIS.md), with raw records, CSV statistics and an exportable chart. Important unit finding: the legacy latency keys end in `Ms`, but currently contain raw CloudSim clock averages without a milliseconds conversion. Use simulator time units for those values until an explicit unit-contract correction is approved; the current dashboard's `ms` labels remain a known issue. Workload parameters and API fields were preserved in this analysis stage.
+Stage 3 adds [repeated multi-camera experiments and analysis](experiments/STAGE3_ANALYSIS.md), with raw records, CSV statistics and an exportable chart. Its finding was that legacy latency keys end in `Ms` while containing raw CloudSim clock averages without conversion. Stage 8 corrected the current dashboard to simulator time units and documented the preserved legacy API contract below. Historical experiment records retain their original keys/values; workload parameters are unchanged.
 
 The Stage 2 camera matrix and reproducible validation commands are recorded in [validation/STAGE2_VALIDATION.md](validation/STAGE2_VALIDATION.md). It checks actual sensor construction, captured emission timing and paired API workloads at 1, 2, 3, 5, 6 and 10 cameras without changing production workload assumptions.
 

@@ -55,6 +55,9 @@
           <div class="section-heading results-subheading"><div><div class="eyebrow">ACTUAL PROCESSOR REPORT</div><h2>Analysis Results</h2></div><a id="report-download" class="button" href="#" download>Download JSON report</a></div>
           <p id="video-rule-note" class="simulation-note"></p>
           <p id="video-report-context" class="simulation-note"></p>
+          <div id="saved-video-wrap" class="video-preview-wrap" hidden><video id="saved-video" controls playsinline preload="metadata" aria-label="Annotated video for the displayed recording report"></video></div>
+          <p id="saved-video-error" class="video-error" role="alert" hidden></p>
+          <p id="saved-video-links" class="simulation-note" hidden><a id="saved-video-open" target="_blank" rel="noopener">Open saved annotated video</a> · <a id="saved-video-download" download>Download annotated video</a></p>
           <div class="analytics-metrics">
             <article class="result-card"><span>PEOPLE DETECTIONS / TRACK OBSERVATIONS</span><strong id="people-detections">—</strong></article>
             <article class="result-card"><span>UNIQUE PEOPLE TRACK IDs</span><strong id="people-tracks">—</strong></article>
@@ -82,10 +85,13 @@
           <p id="batch-limits-note" class="simulation-note">Choose 2-10 uploaded recordings, one per camera. Up to 500 MiB per file, 1 GiB total and 100,000 combined tuples. Cameras are analyzed sequentially; successful workloads are simulated together. Recording start times are modeled together, without assuming the footage is synchronized.</p>
           <label for="batch-files">Camera recordings</label>
           <input id="batch-files" type="file" multiple accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,video/*">
+          <p class="simulation-note">Select several files together, or open the picker again to add more. Remove recordings in the table below. One recording uses Start Analysis above.</p>
+          <button id="clear-batch-selection" class="button" type="button" disabled>Clear selected recordings</button>
           <div class="video-actions"><button id="analyze-batch-button" class="button button-edge" type="button" disabled>Analyze camera recordings</button><span id="batch-status" role="status" aria-live="polite">Choose recordings to begin.</span></div>
           <p id="batch-error" class="video-error" role="alert" hidden></p>
           <p id="batch-summary" class="simulation-note"></p>
           <div class="batch-recovery"><label for="batch-recovery-id">Recover a recording batch by ID</label><input id="batch-recovery-id" type="text" maxlength="32" placeholder="32-character batch ID" autocomplete="off"><button id="recover-batch-button" class="button" type="button">Load batch comparison</button></div>
+          <p class="simulation-note">Use the Batch ID shown in the batch summary, not an individual recording's Job ID. Saved reports and annotated videos load without re-uploading originals.</p>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Camera / recording</th><th>Status</th><th>Analytics</th></tr></thead><tbody id="batch-camera-table"><tr><td colspan="3">No camera recordings selected.</td></tr></tbody></table></div>
         </div>
       </section>

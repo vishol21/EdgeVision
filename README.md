@@ -2,6 +2,8 @@
 
 EdgeVision has two separate technical components: local video analysis in Python (YOLO, ByteTrack and OpenCV), and cloud-versus-edge workload simulation in iFogSim. **Video analytics does not run on iFogSim.** The iFogSim camera feeds are modeled tuple workloads; they do not perform visual object detection.
 
+For the practical handover, see the [setup/reproduction guide](docs/SETUP.md), [demo script](docs/DEMO_SCRIPT.md), [viva notes](docs/VIVA_GUIDE.md) and [documentation/evidence index](docs/README.md). Formal report and slides are deferred at the user's request.
+
 ## Start the website
 
 Clone the project with its pinned simulator dependency:
@@ -58,6 +60,10 @@ From the project root, compile the existing iFogSim project once and run the sce
 
 The **Simulation & Comparison** section shows the profile-based cloud/edge comparison for the selected video job, including source duration, tuple workload, latency, network use, energy and measured wall-clock run time. It labels synthetic test profiles and Java CPU/payload assumptions. Its standalone cloud-only, edge-based and both buttons remain available without a video profile; those runs use the existing commands and `results/cloud.json` / `results/edge.json`. Standalone results are labeled separately and are never used as a fallback for a video job.
 
+Latency is displayed in **raw simulator time units**, not milliseconds: legacy API keys `loopLatencyMs` and `analyticsLatencyMs` preserve their original values. Full loop ends at result arrival at cloud storage; detector arrival excludes detector computation and final delivery. Simulator runtime remains wall-clock milliseconds, separate from video-processing duration/FPS. Traffic and device energy are modeled. If Chart.js cannot load, cards/table remain usable with a visible notice.
+
+The [Stage 7 evaluation](simulation/experiments/STAGE7_EVALUATION.md) retains 110 measured simulations and two excluded warm-ups. Edge reduced detector-arrival latency and counted payload traffic, but increased full-loop latency; recording-derived cases also used more modeled energy. These are qualified simulator results, not hardware measurements or detection-accuracy evidence.
+
 ## API routes
 
 The existing simulation routes remain available:
@@ -65,7 +71,7 @@ The existing simulation routes remain available:
 - `GET /api/health`, `GET /api/results`
 - `POST /api/simulate/cloud`, `POST /api/simulate/edge`, `POST /api/simulate/both`
 
-Video analytics routes use generated 32-character job IDs; IDs are kept in the running Node process:
+Video analytics routes use generated 32-character job IDs, tracked in memory and validated against saved artifacts for completed-job recovery:
 
 - `POST /api/video/upload` — raw video request body; send `X-File-Name` as a URL-encoded filename. Returns a job ID.
 - `POST /api/video/analyze` — JSON body `{ "jobId": "..." }`; returns HTTP 202 while Python runs.
@@ -77,6 +83,8 @@ Video analytics routes use generated 32-character job IDs; IDs are kept in the r
 - `GET /api/video/evidence/{jobId}/{eventId}` — only evidence referenced by an actual event in that job's report.
 
 The Node process allows one active video analysis/simulation compute job at a time. Completed video jobs can be reloaded from their matching private report, workload profile and paired result files after a Node restart. In-progress uploads/analyses are not recovered if Node stops before those artifacts are complete.
+
+Multiple-recording routes are documented in the [batch API](video_analytics/MULTI_CAMERA.md#api). The website provides explicit batch-ID recovery after refresh/restart. Single-video recovery remains available through the job-specific APIs; there is no separate single-job recovery field in the UI.
 
 ## Test the website API
 
@@ -102,4 +110,6 @@ For deterministic frontend state regression checks, run `node --test frontend/te
 
 ## Research basis and limits
 
-The 2019 smart-city surveillance paper is a research reference, not a claim that this implementation reproduces its complete model or results. Video analytics runs locally through Python. iFogSim separately simulates a finite tuple workload derived from the Python profile. Only successful actual outputs are displayed; CPU and tuple payload assumptions are labeled, and actual video frames are not sent to iFogSim.
+The selected reference is L. Yammanuru, P. Venkatadri Reddy, Nikhil Tom Jose and Shinu M Rajagopal, *Real-Time Video Analytics at the Edge: Enabling Low-Latency and Scalable Solutions*, ICCCNP 2025, DOI [10.1109/ICCCNP63914.2025.11233420](https://doi.org/10.1109/ICCCNP63914.2025.11233420). See [full-text alignment and limitations](research/PAPER_ALIGNMENT.md); exact numerical replication is not claimed. The earlier 2019 paper remains historical context, not the selected primary reference.
+
+Video analytics runs locally through Python. iFogSim separately simulates finite tuple workloads. CPU/payload assumptions are disclosed; actual frames are not sent to iFogSim. [Live-camera work](video_analytics/LIVE_CAMERA_FEASIBILITY.md) is feasibility only: no physical camera/NVR or live RTSP adapter is assumed. Synthetic moving-shape clips verify integration, not CCTV accuracy; zero rule events do not establish safety.

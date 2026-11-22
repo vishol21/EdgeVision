@@ -22,6 +22,7 @@ class Element {
   set innerHTML(value) { this._innerHTML = value; this.children = []; }
   get innerHTML() { return this._innerHTML || ''; }
   setAttribute(name, value) { this.attributes[name] = value; }
+  removeAttribute(name) { delete this.attributes[name]; if (name === 'src') this.src = ''; }
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; this.textContent = ''; this._innerHTML = ''; }
   querySelector() { return { textContent: 'ms' }; }
@@ -96,6 +97,122 @@ test('fresh page and refresh never request historical results; controls are neut
     ui.empty();
     assert.deepEqual(ui.calls, ['/api/health', '/api/video/batches/config']);
     ui.buttons.forEach(button => assert.equal(button.attributes['aria-pressed'], 'false'));
+  }
+});
+
+test('batch picker accumulates visits, removes individual files, enforces both bounds and clears', async () => {
+  const ui = harness();
+  const choose = files => { ui.get('#batch-files').files = files; ui.get('#batch-files').emit('change'); };
+  choose([{ name: 'a.avi', size: 100 }]);
+  assert.equal(ui.get('#analyze-batch-button').disabled, true);
+  assert.match(ui.get('#batch-status').textContent, /Add another/);
+  choose([{ name: 'b.avi', size: 100 }]);
+  assert.equal(ui.get('#analyze-batch-button').disabled, false);
+  assert.equal(ui.get('#batch-camera-table').children.length, 2);
+  assert.match(ui.get('#batch-camera-table').children[0].children[0].textContent, /a.avi/);
+  choose(Array.from({ length: 9 }, (_, i) => ({ name: `extra-${i}.avi`, size: 100 })));
+  assert.equal(ui.get('#analyze-batch-button').disabled, true);
+  assert.match(ui.get('#batch-status').textContent, /11 recordings.*2-10/);
+  ui.get('#batch-camera-table').children[0].children[2].children[0].emit('click');
+  assert.equal(ui.get('#batch-camera-table').children.length, 10);
+  assert.equal(ui.get('#analyze-batch-button').disabled, false);
+  choose([]); assert.equal(ui.get('#batch-camera-table').children.length, 10);
+  ui.get('#clear-batch-selection').emit('click');
+  assert.equal(ui.get('#analyze-batch-button').disabled, true);
+  assert.equal(ui.get('#clear-batch-selection').disabled, true);
+  assert.match(ui.get('#batch-summary').textContent, /0 recordings/);
+});
+
+function recoveredBatch() {
+  const id = 'd'.repeat(32);
+  const cameras = ['e', 'f'].map((x, i) => ({ cameraId: x.repeat(32), jobId: String(i+1).repeat(32), filename: `saved-${i}.avi`, status: 'completed', reportUrl: `/api/video/results/${String(i+1).repeat(32)}` }));
+  const sources = cameras.map(c => ({ cameraId: c.cameraId, jobId: c.jobId, tupleCount: 20 }));
+  const simulation = { jobId: id, status: 'completed', workloadProfile: { type: 'multi_video', jobId: id, cameraCount: 2, requestedCameraCount: 2, durationSeconds: 2, tupleCount: 40, sources } };
+  for (const s of ['cloud','edge']) {
+    simulation[s] = result(s); simulation[s].metrics.processedTuples = 40;
+    simulation[s].workloadProfile = { type: 'multi_video', jobId:id, virtualCameraSources:2, tupleCountFromProfile:40, generatedTuples:40, sources:sources.map(c=>({...c,processedTuples:20})) };
+  }
+  return { batchId:id, status:'completed', message:'Recovered completed batch.', cameras, simulation, summary:{eventCount:0} };
+}
+
+test('completed recovery loads all reports and saved playback, clears stale content and supports camera switching', async () => {
+  const batch = recoveredBatch();
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({status:'ok'});
+    if (url.includes('/batches/')) return response(batch);
+    const camera = batch.cameras.find(c => url.endsWith(c.jobId));
+    if (url.includes('/results/')) return response({ jobId:camera.jobId, batchId:batch.batchId, cameraId:camera.cameraId, video:{outputUrl:`/api/video/output/${camera.jobId}`}, processing:{}, events:[] });
+    return response({});
+  });
+  ui.get('#video-report-context').textContent='Unrelated old report';
+  ui.get('#batch-recovery-id').value=batch.batchId.toUpperCase();
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#run-status').textContent,'Complete');
+  assert.equal(ui.calls.filter(x=>x.includes('/video/results/')).length,2);
+  assert.match(ui.get('#video-report-context').textContent,new RegExp(batch.cameras[0].jobId));
+  assert.equal(ui.get('#saved-video').src,`/api/video/output/${batch.cameras[0].jobId}`);
+  assert.equal(ui.get('#saved-video-download').href,`/api/video/output/${batch.cameras[0].jobId}`);
+  await ui.get('#batch-camera-table').children[1].children[2].children[0].emit('click');
+  assert.equal(ui.get('#saved-video').src,`/api/video/output/${batch.cameras[1].jobId}`);
+  assert.match(ui.get('#results-note').textContent,new RegExp(batch.batchId));
+});
+
+test('missing saved artifacts are visible and do not restore an unrelated report', async () => {
+  const batch=recoveredBatch();
+  const ui=harness(async url=>url.endsWith('/health')?response({status:'ok'}):url.includes('/batches/')?response(batch):response({message:'Saved artifact missing'},false));
+  ui.get('#video-report-context').textContent='Unrelated old report';
+  ui.get('#batch-recovery-id').value=batch.batchId;
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#video-results').hidden,true);
+  assert.equal(ui.get('#video-report-context').textContent,'');
+  assert.equal(ui.get('#batch-error').hidden,false);
+  assert.match(ui.get('#batch-error').textContent,/artifact missing/);
+  assert.match(ui.get('#batch-status').textContent,/missing or invalid/);
+});
+
+test('late camera requests and background recovery do not replace the most recently chosen report', async () => {
+  const batch=recoveredBatch(), pending=new Map();
+  const ui=harness(async url=>{
+    if(url.endsWith('/health')) return response({status:'ok'});
+    if(url.includes('/batches/')) return response(batch);
+    const wait=deferred(); const list=pending.get(url)||[];list.push(wait);pending.set(url,list);return wait.promise;
+  });
+  ui.get('#batch-recovery-id').value=batch.batchId;
+  const recovery=ui.get('#recover-batch-button').emit('click'); await flush();
+  const first=ui.get('#batch-camera-table').children[0].children[2].children[0].emit('click');
+  const second=ui.get('#batch-camera-table').children[1].children[2].children[0].emit('click');
+  const reply=(camera,index)=>pending.get(camera.reportUrl)[index].resolve(response({jobId:camera.jobId,processing:{},events:[]}));
+  reply(batch.cameras[1],1);await second;
+  reply(batch.cameras[0],1);await first;
+  reply(batch.cameras[0],0);reply(batch.cameras[1],0);await recovery;
+  assert.match(ui.get('#video-report-context').textContent,new RegExp(batch.cameras[1].jobId));
+});
+
+test('unavailable saved video is reported while another camera report still restores', async () => {
+  const batch=recoveredBatch();
+  const ui=harness(async url=>{
+    if(url.endsWith('/health'))return response({status:'ok'});
+    if(url.includes('/batches/'))return response(batch);
+    const camera=batch.cameras.find(c=>url.endsWith(c.jobId));
+    if(url.includes('/results/'))return response({jobId:camera.jobId,video:{outputUrl:`/api/video/output/${camera.jobId}`},processing:{},events:[]});
+    return response({},camera.jobId!==batch.cameras[0].jobId);
+  });
+  ui.get('#batch-recovery-id').value=batch.batchId;
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#run-status').textContent,'Recovery incomplete');
+  assert.match(ui.get('#batch-error').textContent,/annotated video is missing/);
+  assert.match(ui.get('#video-report-context').textContent,new RegExp(batch.cameras[1].jobId));
+  assert.equal(ui.get('#results-table-body').children.length,2);
+});
+
+test('invalid IDs, single Job IDs and incomplete batch errors are visible', async () => {
+  for (const [id,payload] of [['bad',null],['a'.repeat(32),{message:'This is a single-video Job ID, not a Batch ID.'}],['b'.repeat(32),{status:'draft'}]]) {
+    const ui=harness(async url=>url.endsWith('/health')?response({status:'ok'}):response(payload,payload?.status==='draft'));
+    ui.get('#batch-recovery-id').value=id;
+    await ui.get('#recover-batch-button').emit('click');
+    assert.equal(ui.get('#batch-error').hidden,false);
+    assert.equal(ui.get('#run-status').textContent,'Failed');
+    assert.match(ui.get('#batch-error').textContent,/32-character|Job ID|has not started/);
   }
 });
 
@@ -267,6 +384,10 @@ test('batch response renders combined results only for the selected complete cam
       if (url.endsWith('/health')) return response({ status: 'ok' });
       if (url === '/api/video/batches') return response({ batchId, message: 'Upload cameras.', cameras: cameras.map(camera => ({ ...camera, status: 'awaiting_upload' })) });
       if (url.includes('/cameras/')) return response({ status: 'uploaded' });
+      if (url.includes('/api/video/results/')) {
+        const camera = cameras.find(item => url.endsWith(item.jobId));
+        return response({ jobId: camera.jobId, batchId, cameraId: camera.cameraId, processing: {}, events: [] });
+      }
       return response(batch);
     });
     ui.get('#batch-files').files = [{ name: 'a.avi', size: 100 }, { name: 'b.avi', size: 100 }];
