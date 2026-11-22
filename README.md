@@ -30,7 +30,7 @@ Live RTSP ingestion, physical camera registration and cross-camera re-identifica
 Browser dashboard (frontend/)
         |
         v
-Node HTTP/API server (server/) ----- standalone virtual-camera request
+Node HTTP/API server (backend/) ----- standalone virtual-camera request
         |                                         |
         v                                         |
 Python analytics (video_analytics/)                |
@@ -72,7 +72,7 @@ EdgeVision/
 |-- package.json                  Root npm-start command
 |-- index.html                    Convenience redirect
 |-- frontend/                     Dashboard HTML, CSS and browser JavaScript
-|-- server/                       Node API server and batch module
+|-- backend/                      Node API server and batch module
 |-- tests/node/                   Node unit and integration tests
 |-- video_analytics/
 |   |-- app/                      Analytics modules and activity rules
@@ -95,8 +95,7 @@ EdgeVision/
 |   |-- run.ps1
 |   `-- validate-cameras.ps1
 |-- results/                      Generated simulation and evaluation results
-|-- docs/                         SETUP.md, DEMO_SCRIPT.md and VIVA_GUIDE.md
-`-- research/                     References, alignment and dated research plans
+`-- research/                     References, research plans and guides/ (setup, demo, viva)
 ```
 
 This is the only EdgeVision-owned README. Upstream iFogSim and installed Python packages retain their own README files and notices. Those third-party documents are not duplicate project guides.
@@ -154,7 +153,7 @@ Set `JAVA_HOME` to your actual JDK installation. The scripts otherwise check the
 
 The scripts use `simulation/vendor/iFogSim/src`, the bundled `jars` and `jars/commons-math3-3.5`, and write compiled classes under `simulation/target/`.
 
-Detailed Windows setup and troubleshooting remain available in [docs/SETUP.md](docs/SETUP.md).
+Detailed Windows setup and troubleshooting remain available in [research/guides/SETUP.md](research/guides/SETUP.md).
 
 ## How to run the project
 
@@ -164,7 +163,7 @@ From the repository root:
 npm start
 ```
 
-Open [http://127.0.0.1:4173](http://127.0.0.1:4173). The compatibility launcher `npm --prefix frontend start` also works. The Node server now lives under `server/` and explicitly serves browser assets from `frontend/`.
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173). The compatibility launcher `npm --prefix frontend start` also works. The Node server now lives under `backend/` and explicitly serves browser assets from `frontend/`.
 
 Use one server instance. Stop it with Ctrl+C before restarting after backend changes. If port 4173 is occupied, stop the existing EdgeVision instance in its own terminal; do not terminate unrelated processes. A different port can be selected with `PORT` before startup.
 
@@ -386,8 +385,8 @@ Run mutation-producing tests and experiment commands on a dedicated idle project
 From the root:
 
 ```powershell
-node --check server/dev-server.js
-node --check server/multi-video.js
+node --check backend/dev-server.js
+node --check backend/multi-video.js
 node --test tests/node/test-state.js tests/node/test-multi-video-unit.js tests/node/test-batch-recovery.js
 ```
 
@@ -443,7 +442,18 @@ The analysis-only Stage 7 command reads retained raw evidence without starting i
 - [Paper alignment](research/PAPER_ALIGNMENT.md): selected-paper claims, implementation mapping and limitations.
 - [Camera feasibility](video_analytics/LIVE_CAMERA_FEASIBILITY.md): proposed live-camera requirements and boundaries.
 - [Project status](PROJECT_STATUS.md): dated approvals, changes and verification history.
-- [Setup guide](docs/SETUP.md), [demonstration script](docs/DEMO_SCRIPT.md), and [viva guide](docs/VIVA_GUIDE.md): practical handover materials.
+- [Setup guide](research/guides/SETUP.md), [demonstration script](research/guides/DEMO_SCRIPT.md), and [viva guide](research/guides/VIVA_GUIDE.md): practical handover materials.
+
+## Retained results and project guides
+
+The repository separates the browser dashboard (`frontend/`) from the Node API (`backend/`). Python analytics and Java simulation remain in their own folders because they are required application components. Tests are retained for recovery, file-selection and workload regression checks. Reviewed evidence is the reference for final research results; older distinct records are historical evidence, not additional final evaluations.
+
+- Final reviewed evaluation: [Stage 7 report](simulation/experiments/STAGE7_EVALUATION.md), with raw data, summary tables and charts in `simulation/experiments/evidence/stage7-2026-11-17/`.
+- Reviewed synthetic baseline: [Stage 3 report](simulation/experiments/STAGE3_ANALYSIS.md), with its four evidence files in `simulation/experiments/evidence/2026-11-17/`. Identical generated copies were removed from `results/experiments/stage3-2026-11-17/`.
+- `results/experiments/stage7-2026-11-17-verified/` retains the verified run artifacts. Other distinct historical evaluation and validation records remain available; they are not presented as final results.
+- `results/video_workloads/` and `results/video_batches/` retain saved comparisons needed for job and batch recovery. Keep them with the corresponding reports, videos, profiles and manifests under `video_analytics/`.
+- `results/cloud.json` and `results/edge.json` retain standalone comparison history.
+- Setup, demonstration and viva guides now live under `research/guides/`. Historical stage records may mention their previous `docs/` paths.
 
 ## Limitations
 

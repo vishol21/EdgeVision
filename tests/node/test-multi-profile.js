@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
-const { combineProfiles } = require('../../server/multi-video');
+const { combineProfiles } = require('../../backend/multi-video');
 const root = path.resolve(__dirname, '../..');
 const id = () => randomUUID().replaceAll('-', '');
 const template = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));

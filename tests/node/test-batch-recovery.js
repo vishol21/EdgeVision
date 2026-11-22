@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { createMultiVideoApi, publicProfile, combineProfiles } = require('../../server/multi-video');
+const { createMultiVideoApi, publicProfile, combineProfiles } = require('../../backend/multi-video');
 const evidence = JSON.parse(fs.readFileSync(path.join(__dirname, '../../simulation/experiments/evidence/stage7-2026-11-17/raw.json'), 'utf8'));
 
 function fixture(t) {

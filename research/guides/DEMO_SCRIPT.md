@@ -36,7 +36,7 @@ flowchart LR
 4. Explain full-loop versus detector-arrival endpoints. Latency is raw simulator time; runtime is wall-clock milliseconds. Traffic/energy are modeled.
 5. Change camera count. The comparison clears because that new configuration has not run.
 
-Do not claim edge always wins. If discussing the retained evaluation, show [the actual Stage 7 results](../simulation/experiments/STAGE7_EVALUATION.md): edge reduced detector arrival/traffic but increased full-loop latency; energy outcomes depend on case.
+Do not claim edge always wins. If discussing the retained evaluation, show [the actual Stage 7 results](../../simulation/experiments/STAGE7_EVALUATION.md): edge reduced detector arrival/traffic but increased full-loop latency; energy outcomes depend on case.
 
 ## 3. Demonstrate single recording
 
@@ -64,4 +64,4 @@ If Chart.js is unavailable, the dashboard notice explains that cards/table remai
 
 Say: "The prototype implements local uploaded-video analytics and reproducible placement simulations, including multiple recordings and validated recovery. Physical RTSP cameras, distributed YOLO execution, hardware calibration and labeled CCTV accuracy evaluation remain future work."
 
-Keep [viva notes](VIVA_GUIDE.md) and [evidence links](../README.md#evidence-map) available for follow-up questions. Do not present the selected paper's gains as EdgeVision's own results.
+Keep [viva notes](VIVA_GUIDE.md) and [evidence links](../../README.md#evidence-map) available for follow-up questions. Do not present the selected paper's gains as EdgeVision's own results.

@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { combineProfiles, publicProfile, validBatchResult } = require('../../server/multi-video');
+const { combineProfiles, publicProfile, validBatchResult } = require('../../backend/multi-video');
 const source = (character, frames, fps, framesPerTuple) => ({ cameraId: character.repeat(32), jobId: (character === 'a' ? 'c' : 'd').repeat(32),
   workloadProfile: { jobId: (character === 'a' ? 'c' : 'd').repeat(32), sourceClassification: 'synthetic_test',
     video: { durationSeconds: frames / fps },

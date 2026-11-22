@@ -1,6 +1,6 @@
 # Viva questions and defensible answers
 
-These answers describe implemented behavior. Use [the evidence index](../README.md#evidence-map) for supporting records; do not turn proposed work into completed features.
+These answers describe implemented behavior. Use [the evidence index](../../README.md#evidence-map) for supporting records; do not turn proposed work into completed features.
 
 1. **What problem does EdgeVision study?** How cloud-only versus fog/edge placement affects modeled video-analytics workloads at different source demands, alongside actual local recording analysis.
 2. **Does YOLO run inside iFogSim?** No. Python runs YOLO26n/ByteTrack locally; Java receives a finite workload profile and simulates processing demand/placement. Frames are not passed to iFogSim.
