@@ -147,3 +147,111 @@ Completed: current-code inspection; local RAM/backend/CUDA/default-inference-siz
 Not tested: any physical camera or NVR, RTSP authentication, network timeout/reconnect behavior, H.264/H.265 live decode, real 1080p/15-FPS throughput, multi-stream capacity, live tracking/rules, transport encryption or sustained resource usage. No stream was connected, and no ordinary file/webcam was presented as a deployed CCTV network. See [readiness evidence](../research/stage5-readiness.json).
 
 The feasibility investigation is complete under the user's requirements; live implementation remains unapproved and hardware-dependent. The next roadmap stage is reference-paper alignment (Stage 6), which requires its own approval and the actual selected paper.
+
+
+## Reconciliation addendum - 2026-11-17 (current baseline 5091b7f)
+
+This addendum reconciles the original Stage 5 study with completed subsequent work. The original dated study above and [readiness evidence](../research/stage5-readiness.json) are preserved unchanged. Its closing next-stage instructions and pending latency-label correction describe the earlier baseline; the status below supersedes them for current planning. This reconciliation is documentation only and authorizes no live implementation, endpoint, UI control, connection or network scan.
+
+### Completed, proposed and unimplemented functionality
+
+| Classification | Current status |
+|---|---|
+| Completed and published | Stage 5 feasibility, 564f5a4; Stage 6 selected-paper alignment, 1008c5a; Stage 7 evaluation, 3aba133; Stage 8 dashboard quality, 5091b7f. These stages must not be repeated as unfinished work. |
+| Completed application behavior | Local single/multiple-recording YOLO26n/ByteTrack analytics, finite video-derived profiles, 1-10 standalone virtual-camera sources, matched cloud/edge comparison and validated saved-artifact recovery. Frames are not sent to iFogSim. |
+| Current latency contract | Stage 8 labels full-loop/detector-arrival latency as simulator time units; legacy JSON keys/values remain unchanged. This corrects presentation, not hardware calibration or live capture-to-alert measurement. |
+| Local documentation pending publication | Nine already-staged Markdown files cover practical Stage 9 handover; report/slides remain deferred by the user. This addendum and tracker reconciliation remain unstaged for separate review. |
+| Proposed only | The registration/selection documents below, per-camera acquisition, queue/retry/timestamp policies and finite live-window mapping. These are design specifications, not accepted configuration files. |
+| Unimplemented and unverified | Physical-camera integration, registration endpoints/UI, RTSP acquisition/authentication/reconnection, per-camera live rule configuration, secure camera-secret resolution, live-window trace schema and sustained 1080p/15-FPS capacity. No camera/NVR is confirmed. |
+
+[Paper alignment](../research/PAPER_ALIGNMENT.md), [evaluation](../simulation/experiments/STAGE7_EVALUATION.md) and [dashboard verification](../frontend/STAGE8_VERIFICATION.md) document the completed later stages. The original evidence remains dated; no new runtime capability, decoding, inference or camera test is claimed by this addendum. The preceding read-only inspection reconfirmed local backend/timeout constants; this reconciliation runs documentation checks only.
+
+### Proposed registration document - not implemented
+
+The example is a non-operational design for a future manually registered camera. Its identifier and `.invalid` hostname are placeholders, not a real camera. No registry file is created by this study. The proposed schema version is independent of existing uploaded-video workload schemas.
+
+```json
+{
+  "schemaVersion": 1,
+  "cameraId": "11111111111141118111111111111111",
+  "registrationRevision": 1,
+  "displayName": "Proposed lab camera",
+  "enabled": false,
+  "source": {
+    "protocol": "rtsp",
+    "host": "camera-host.example.invalid",
+    "port": 554,
+    "streamPath": "/manufacturer-documented-path",
+    "nvrChannel": null,
+    "transportPreference": "tcp"
+  },
+  "credentialRef": null,
+  "expectedInput": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 15,
+    "codec": "h264"
+  },
+  "processingPolicy": {
+    "mode": "undecided_requires_approval",
+    "regionConfigRef": null
+  }
+}
+```
+
+| Field/group | Proposed validation and meaning |
+|---|---|
+| cameraId | Stable unique 32-character lowercase hexadecimal logical ID, not a host address, upload job ID or track ID. Re-registering changed connection settings retains this ID and increments registrationRevision. |
+| schemaVersion / registrationRevision | Positive integers; initial proposed schema version 1. Reject unsupported versions and stale selection revisions. No current parser implements this. |
+| displayName / enabled | Bounded human-readable label (proposed 1-80 characters); boolean enabled defaults false. Labels are escaped on display. Enabling or saving registration must not itself initiate a connection. |
+| source | Separately validated RTSP host, port (1-65535) and manufacturer-documented path; optional explicit NVR channel. No user-info, password, token or credential-bearing query string. Resolve any device-specific secret privately; reject unsupported credential-in-path requirements pending a reviewed adapter. |
+| host/path authorization | Restrict to explicitly authorized destinations; reject arbitrary URLs/unrelated services and revalidate resolved destinations before future connection. Do not discover hosts or scan ports. Multiple NVR channels may share a host but have distinct logical IDs/paths; flag accidental duplicate source registrations. |
+| credentialRef | Null for a documented no-auth test source, otherwise an opaque reference into an approved OS-managed secret store. Username/password belong in that store, not this document. A reference is not a credential and must not trigger secret collection during this study. Missing required secrets would block a future start. |
+| expectedInput | Requested source settings, not measured negotiated media or proof of processing capacity. Mismatches would be surfaced; do not silently substitute lower resolution/FPS. H.264 is the initial trial candidate from the original study, not a compatibility guarantee. |
+| transportPreference | Proposed tcp or udp enum, subject to exact device/backend tests. TCP does not establish encryption or bounded latency; transport protection requires separate verification. |
+| processingPolicy | All-frame versus approved sampling remains undecided. regionConfigRef would reference validated per-camera rule configuration; null must explicitly mean no region-dependent live rules evaluated. No current per-camera live-region editor exists. |
+
+The future registry would be private server-side metadata. Browser-facing selection should expose only IDs, labels and non-secret health summaries, not stream paths, secret references or assembled RTSP URLs. Existing uploaded-video and standalone routes would remain unchanged; no new route names or working controls are claimed here.
+
+### Proposed selection/session document - not implemented
+
+Keep selection separate from registration so choosing cameras does not modify credentials or automatically start ingestion. The example deliberately selects none and is not startable.
+
+```json
+{
+  "schemaVersion": 1,
+  "selectionId": "22222222222242228222222222222222",
+  "selectedCameras": [],
+  "sessionPolicy": {
+    "durationLimitSeconds": 60,
+    "queueMaxFramesPerCamera": 2,
+    "dropPolicy": "drop_oldest_with_accounting",
+    "archiveRawVideo": false
+  }
+}
+```
+
+An illustrative selectedCameras array entry has the following shape. It references the placeholder registration above; because that registration is disabled, it would be rejected for a future start. This example is not a connection request.
+
+```json
+{
+  "cameraId": "11111111111141118111111111111111",
+  "registrationRevision": 1
+}
+```
+
+Proposed rules for a future implementation:
+
+- A draft/stopped selection may contain zero cameras; starting would require 1-10 distinct registered, enabled and authorized IDs, each paired with its registrationRevision. An illustrative selected entry would have cameraId and registrationRevision fields matching the registry. Reject unknown/duplicate/disabled IDs, stale revisions and unresolved required credentials before connecting.
+- The 60-second limit and two-frame queue are proposed bounded-trial values, not active settings or an approved retention policy/SLA. A future trial still needs its own approval, disk/resource budget, timeout/backoff values and explicit start/stop action. No perpetual background reconnect starts from registration/selection alone.
+- Freeze the validated registration revisions and session policy into a unique session snapshot. A later registry edit must not silently change an active source; require explicit revalidation/restart. Session selection state is separate from the current uploaded/batch/virtual comparison state.
+- Bounded oldest-frame dropping would require decoded/processed/dropped counters and frame-age reporting. Drops mean the system has not analyzed all 15 source frames per second; they must never satisfy an all-frame requirement silently. Do not treat outages or rejected cameras as safe/no-event footage.
+- Proposed runtime health states are registered, connecting, streaming, reconnecting, stopped and failed. They are not stored as proven live states in this documentation. Each reconnect increments a connection epoch and resets continuity-dependent tracker/rule state.
+- Proposed observations retain cameraId, sessionId, connectionEpoch, source timestamp (nullable with provenance), monotonic receipt/processing times, optional UTC correlation and dropped/missing coverage. Source-clock trust/synchronization must be demonstrated before any capture-to-output or cross-camera synchronization claim.
+- Only completed immutable finite windows would feed paired iFogSim runs. Preserve camera/session/window identity and coverage, use identical inputs for both placements, and extend the regular-interval profile contract explicitly for irregular live traces. Do not fabricate frames or bypass the existing compute lock. No such live-window schema is implemented now.
+
+### Remaining approvals and documentation validation
+
+The feasibility study remains complete; current work only reconciles its documentation. Hardware inventory and separately approved bounded trials are prerequisites to live implementation. Stage 6-8 completion does not authorize those trials, and the pending Stage 9 report/slides remain deferred.
+
+Validation for this reconciliation is limited to Markdown links/headings, JSON-example syntax and stated field constraints, arithmetic consistency, original-evidence preservation, two-file edit scope and separate staged/unstaged diff review. No application tests, package installation, runtime probe, stream connection or network scan are performed for this reconciliation. Do not stage, commit or push these additional edits until the user reviews the separate layers and approves the desired publication scope.
