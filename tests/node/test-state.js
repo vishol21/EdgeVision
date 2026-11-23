@@ -27,6 +27,7 @@ class Element {
   replaceChildren(...nodes) { this.children = nodes; this.textContent = ''; this._innerHTML = ''; }
   querySelector() { return { textContent: 'ms' }; }
   emit(name, event = {}) { return this.listeners[name]?.(event); }
+  click() { return this.emit('click'); }
 }
 
 const deferred = () => {
@@ -61,6 +62,7 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
   });
   get('#camera-count').value = '5';
   const calls = [];
+  const blobs = [];
   const charts = [];
   class Chart {
     constructor(canvas, config) { this.data = config.data; this.options = config.options; charts.push(this); }
@@ -75,11 +77,12 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
       if (url === '/api/video/batches/config') return response({ maxCameras: 10, maxFileBytes: 524288000, maxTotalBytes: 1073741824, maxCombinedTuples: 100000 });
       return handler(url, options);
     },
-    URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
+    Blob,
+    URL: { createObjectURL: value => { blobs.push(value); return 'blob:test'; }, revokeObjectURL() {} },
     setTimeout, console
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../frontend/js/app.js'), 'utf8'), context);
-  return { get, buttons, calls, charts,
+  return { get, buttons, calls, charts, blobs,
     run: action => get(`[data-run="${action}"]`).emit('click'),
     empty() {
       assert.equal(get('[data-metric="latency"]').children[0].textContent, '—');
@@ -89,6 +92,95 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
     }
   };
 }
+
+test('cancel during upload stops before analysis starts and restores controls', async () => {
+  const upload = deferred(); let id;
+  const ui = harness(async (url, options) => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.endsWith('/video/upload')) { id = options.headers['X-Job-Id']; return upload.promise; }
+    if (url.includes('/video/cancel/')) return response({ status: 'cancelled' });
+    if (url.includes('/video/status/')) return response({ status: 'cancelled' });
+    return response({});
+  });
+  ui.get('#video-file').files = [{ name: 'example.avi', size: 100 }];
+  ui.get('#video-file').emit('change');
+  const analysis = ui.get('#analyze-button').emit('click'); await flush();
+  assert.match(id, /^[a-f0-9]{32}$/);
+  assert.equal(ui.get('#cancel-analysis').hidden, false);
+  await ui.get('#cancel-analysis').emit('click');
+  upload.resolve(response({ jobId: id })); await analysis;
+  assert.equal(ui.get('#run-status').textContent, 'Cancelled');
+  assert.equal(ui.get('#analyze-button').disabled, false);
+  assert.ok(!ui.calls.includes('/api/video/analyze'));
+});
+
+test('track details are ordered, paged and filtered; readable report retains limitations', async () => {
+  const batch = recoveredBatch();
+  const tracks = Array.from({ length: 24 }, (_, i) => ({ trackingId: i + 1, objectClass: i < 20 ? 'car' : 'person', firstSeenSeconds: i, lastSeenSeconds: i + 2 }));
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.includes('/batches/')) return response(batch);
+    const camera = batch.cameras.find(c => url.endsWith(c.jobId));
+    return response({ jobId: camera.jobId, sourceName: 'example.avi', processing: {}, events: [], trackingSummaries: tracks,
+      objectCountsByClass: { person: { uniqueTrackingIds: 4 }, car: { uniqueTrackingIds: 20 } } });
+  });
+  ui.get('#batch-recovery-id').value = batch.batchId;
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#tracking-table').children.length, 10);
+  assert.equal(ui.get('#tracking-table').children[0].children[1].textContent, 'person');
+  ui.get('#tracks-next').emit('click'); assert.match(ui.get('#track-page-info').textContent, /Page 2 of 3/);
+  ui.get('#track-filter').value = 'person'; ui.get('#track-filter').emit('change');
+  assert.equal(ui.get('#tracking-table').children.length, 4);
+  ui.get('#readable-report').emit('click');
+  const text = await ui.blobs.find(value => value instanceof Blob).text();
+  assert.match(text, /People tracks: 4/); assert.match(text, /Vehicle tracks: 20/);
+  assert.match(text, /does not confirm robbery/);
+});
+
+test('review timestamps seek playback and an unsupported codec has a useful fallback', async () => {
+  const batch = recoveredBatch();
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.includes('/batches/')) return response(batch);
+    const camera = batch.cameras.find(c => url.endsWith(c.jobId));
+    return response({ jobId: camera.jobId, video: { outputUrl: `/api/video/output/${camera.jobId}` }, processing: {}, eventCount: 1,
+      ruleCoverage: { reviewSuggestionsEnabled: true, reviewSuggestionCount: 1, reviewSuggestionLimit: 1 },
+      events: [{ event_type: 'rapid_movement_review', timestamp_seconds: 2, object_class: 'person', details: { reason: 'Review image motion.' } }] });
+  });
+  ui.get('#batch-recovery-id').value = batch.batchId; await ui.get('#recover-batch-button').emit('click');
+  assert.match(ui.get('#video-rule-note').textContent, /limit was reached/);
+  const player = ui.get('#saved-video'); player.play = () => Promise.reject(new Error('Unsupported codec'));
+  const details = ui.get('#event-list').children[0].children[0];
+  details.children.at(-1).emit('click'); await flush();
+  assert.equal(player.currentTime, 2);
+  assert.equal(ui.get('#saved-video-error').hidden, false);
+  assert.match(ui.get('#saved-video-error').textContent, /Open or download/);
+});
+
+test('legacy person sightings are excluded while specific incident cues and counts agree', async () => {
+  const batch = recoveredBatch();
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.includes('/batches/')) return response(batch);
+    const camera = batch.cameras.find(c => url.endsWith(c.jobId));
+    return response({ jobId: camera.jobId, processing: {}, eventCount: 3,
+      events: [
+        { event_type: 'person_visible', timestamp_seconds: 0, object_class: 'person' },
+        { event_type: 'possible_fall_review', timestamp_seconds: 2, object_class: 'person' },
+        { event_type: 'possible_vehicle_collision_review', timestamp_seconds: 3, object_class: 'car' }
+      ] });
+  });
+  ui.get('#batch-recovery-id').value = batch.batchId;
+  await ui.get('#recover-batch-button').emit('click');
+  assert.equal(ui.get('#event-total').textContent, '2');
+  assert.equal(ui.get('#event-list').children.length, 2);
+  assert.match(ui.get('#event-list').children[0].children[0].children[0].textContent, /Possible person fall/);
+  assert.match(ui.get('#event-list').children[1].children[0].children[0].textContent, /Possible vehicle collision/);
+  ui.get('#readable-report').emit('click');
+  const text = await ui.blobs.find(value => value instanceof Blob).text();
+  assert.doesNotMatch(text, /person_visible/);
+  assert.match(text, /possible_vehicle_collision_review/);
+});
 
 test('fresh page and refresh never request historical results; controls are neutral', async () => {
   for (let refresh = 0; refresh < 2; refresh++) {

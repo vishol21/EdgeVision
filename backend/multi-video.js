@@ -204,11 +204,17 @@ function createMultiVideoApi(deps) {
     activeBatches.add(batch.batchId);
     try {
       for (const camera of batch.cameras) {
+        if (batch.cancelRequested) throw new Error('Batch cancelled.');
         if (camera.status !== 'uploaded') continue;
         camera.status = 'processing';
         batch.message = `Analyzing camera ${batch.cameras.indexOf(camera) + 1} of ${batch.cameras.length}: ${camera.filename}`;
         await persist(batch);
         const job = await analyzeVideo(await getVideoJob(camera.jobId));
+        if (batch.cancelRequested) {
+          camera.status = job.analysisStatus === 'completed' ? 'completed' : 'cancelled';
+          // Keep valid completed associations before leaving the loop.
+          if (camera.status !== 'completed') throw new Error('Batch cancelled.');
+        }
         if (job.analysisStatus === 'completed' && job.workloadProfile) {
           camera.status = 'completed';
           await fs.promises.writeFile(path.join(outputsRoot, camera.jobId, 'batch-source.json'),
@@ -219,6 +225,7 @@ function createMultiVideoApi(deps) {
         await persist(batch);
       }
       const { sources, totals } = await sourcesFor(batch);
+      if (batch.cancelRequested) throw new Error('Batch cancelled.');
       batch.summary = totals;
       if (!sources.length) {
         batch.status = 'failed'; batch.message = 'No camera analysis succeeded. No combined simulation was run.';
@@ -233,15 +240,23 @@ function createMultiVideoApi(deps) {
       batch.status = 'simulation_running'; batch.simulationStatus = 'running';
       batch.message = `Running both placements for ${sources.length} successful camera recordings; excluded ${batch.cameras.length - sources.length}.`;
       await persist(batch);
-      await runSimulation(profilePath);
+      if (batch.cancelRequested) throw new Error('Batch cancelled.');
+      await runSimulation(profilePath, batch);
+      if (batch.cancelRequested) throw new Error('Batch cancelled.');
       await readComparison(batch, combined);
+      if (batch.cancelRequested) throw new Error('Batch cancelled.');
       batch.simulationStatus = 'completed';
       batch.status = sources.length === batch.cameras.length ? 'completed' : 'partial_success';
       batch.message = batch.status === 'completed' ? 'All camera analyses and the combined comparison completed.'
         : 'Combined comparison completed using successful cameras only. Failed cameras are excluded and listed below.';
     } catch (error) {
-      batch.status = 'simulation_failed'; batch.simulationStatus = 'failed';
-      batch.error = safeError(error.message); batch.message = 'Camera analytics were preserved, but the combined comparison failed.';
+      batch.status = batch.cancelRequested ? 'cancelled' : 'simulation_failed';
+      batch.simulationStatus = batch.cancelRequested ? 'cancelled' : 'failed';
+      batch.error = batch.cancelRequested ? null : safeError(error.message);
+      batch.message = batch.cancelRequested ? 'Batch cancelled. Completed camera reports are kept.' : 'Camera analytics were preserved, but the combined comparison failed.';
+      if (batch.cancelRequested) for (const camera of batch.cameras) {
+        if (['awaiting_upload', 'uploaded', 'processing', 'uploading'].includes(camera.status)) camera.status = 'cancelled';
+      }
       batch.cloud = null; batch.edge = null;
     } finally {
       batch.completedAt = new Date().toISOString();
@@ -262,11 +277,13 @@ function createMultiVideoApi(deps) {
       if (request.method === 'POST' && pathname === '/api/video/batches') {
         if (isBusy()) throw httpError(409, 'Another compute job is running.');
         const body = await readJsonBody(request);
+        if (body.frameInterval !== undefined && ![1, 3].includes(body.frameInterval)) throw httpError(400, 'Choose detailed or faster analysis.');
         if (!Array.isArray(body?.cameras) || body.cameras.length < 2 || body.cameras.length > maxCameras) throw httpError(400, `Select 2-${maxCameras} recordings; use the existing single-video workflow for one recording.`);
         if (body.cameras.some(camera => !camera || !filenameSafe(camera.filename) || !Number.isSafeInteger(camera.sizeBytes) || camera.sizeBytes < 1)) throw httpError(400, 'Camera filenames and positive byte sizes are required.');
         const total = body.cameras.reduce((sum, camera) => sum + camera.sizeBytes, 0);
         if (!Number.isSafeInteger(total) || total > maxTotalBytes) throw httpError(413, 'Combined recording sizes exceed the configured batch limit.');
         const batch = { batchId: identity(), status: 'draft', createdAt: new Date().toISOString(), message: 'Upload the selected camera recordings, then start sequential analysis.',
+          frameInterval: body.frameInterval || 1,
           simulationStatus: 'not_started', error: null, totalBytes: total,
           cameras: body.cameras.map(camera => ({ cameraId: identity(), jobId: null, filename: camera.filename, sizeBytes: camera.sizeBytes,
             status: camera.sizeBytes > settings.upload.max_file_size_bytes ? 'upload_failed' : 'awaiting_upload',
@@ -274,7 +291,7 @@ function createMultiVideoApi(deps) {
         batches.set(batch.batchId, batch); await persist(batch);
         sendJson(response, 201, publicBatch(batch)); return;
       }
-      const match = pathname.match(/^\/api\/video\/batches\/([a-f0-9]{32})(?:\/(run|cameras)(?:\/([a-f0-9]{32}))?)?$/);
+      const match = pathname.match(/^\/api\/video\/batches\/([a-f0-9]{32})(?:\/(run|cameras|cancel)(?:\/([a-f0-9]{32}))?)?$/);
       if (!match) throw httpError(404, 'Batch endpoint not found.');
       const batch = await getBatch(match[1]);
       if (!batch) {
@@ -285,6 +302,21 @@ function createMultiVideoApi(deps) {
         throw httpError(404, 'No saved batch was found for this Batch ID in this project. Check the ID and use the same project/server where it was created.');
       }
       if (request.method === 'GET' && !match[2]) { sendJson(response, 200, publicBatch(batch)); return; }
+      if (request.method === 'POST' && match[2] === 'cancel' && !match[3]) {
+        if (batch.status === 'cancelled') { sendJson(response, 200, publicBatch(batch)); return; }
+        if (!['draft', 'processing', 'simulation_running'].includes(batch.status)) throw httpError(409, 'This batch has already finished.');
+        batch.cancelRequested = true;
+        batch.message = 'Stopping the batch. Completed reports will be kept.';
+        try { await deps.cancelBatch(batch); }
+        catch { batch.cancelRequested = false; throw httpError(500, 'The batch could not be stopped. Keep this page open and retry.'); }
+        if (!activeBatches.has(batch.batchId)) {
+          batch.status = batch.simulationStatus = 'cancelled';
+          batch.message = 'Batch cancelled. Completed camera reports are kept.';
+          for (const camera of batch.cameras) if (camera.status !== 'completed') camera.status = 'cancelled';
+          await persist(batch);
+        }
+        sendJson(response, 202, publicBatch(batch)); return;
+      }
       if (request.method === 'POST' && match[2] === 'cameras' && match[3]) {
         const camera = batch.cameras.find(camera => camera.cameraId === match[3]);
         if (!camera) throw httpError(404, 'Camera does not belong to this batch.');
@@ -293,7 +325,8 @@ function createMultiVideoApi(deps) {
         try { suppliedName = decodeURIComponent(String(request.headers['x-file-name'] || '')); } catch { throw httpError(400, 'Invalid encoded filename.'); }
         if (suppliedName !== camera.filename || Number(request.headers['content-length']) !== camera.sizeBytes) throw httpError(400, 'Upload filename/size must match the selected camera manifest.');
         camera.status = 'uploading';
-        const job = await uploadVideo(request, response, { batchId: batch.batchId, cameraId: camera.cameraId });
+        const job = await uploadVideo(request, response, { batchId: batch.batchId, cameraId: camera.cameraId, frameInterval: batch.frameInterval || 1 });
+        if (batch.cancelRequested) { camera.status = 'cancelled'; await persist(batch); return; }
         if (job) { camera.jobId = job.jobId; camera.status = 'uploaded'; }
         else { camera.status = 'upload_failed'; camera.error = `Recording upload rejected (HTTP ${response.statusCode}).`; }
         await persist(batch); return;

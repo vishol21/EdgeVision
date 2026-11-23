@@ -34,7 +34,15 @@ if ($null -eq $profilePath -and [string]::IsNullOrWhiteSpace($WorkloadProfileId)
     $WorkloadProfileId = [guid]::NewGuid().ToString('N')
 }
 
-if (-not (Test-Path -LiteralPath (Join-Path $classes 'com/edgevision/simulation/EdgeVisionSimulation.class'))) {
+$entryClass = Join-Path $classes 'com/edgevision/simulation/EdgeVisionSimulation.class'
+$needsBuild = -not (Test-Path -LiteralPath $entryClass)
+if (-not $needsBuild) {
+    $builtAt = (Get-Item -LiteralPath $entryClass).LastWriteTimeUtc
+    $newerSources = @(Get-ChildItem -LiteralPath (Join-Path $simRoot 'src/main/java') -Filter '*.java' -File -Recurse |
+        Where-Object { $_.LastWriteTimeUtc -gt $builtAt })
+    $needsBuild = $newerSources.Count -gt 0
+}
+if ($needsBuild) {
     & (Join-Path $simRoot 'build.ps1')
     if ($LASTEXITCODE -ne 0) { throw 'Simulation build failed.' }
 }

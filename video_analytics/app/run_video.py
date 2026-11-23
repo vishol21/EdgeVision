@@ -6,6 +6,7 @@ import argparse
 import json
 import shutil
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from .config import load_settings
@@ -20,8 +21,14 @@ def main() -> int:
                         help="Label this run as synthetic test media in its workload profile.")
     parser.add_argument("--job-id", help="Use an existing 32-character job ID for report/profile association.")
     parser.add_argument("--display-filename", help="Safe display name to retain instead of the private staged upload name.")
+    parser.add_argument("--frame-interval", type=int, choices=(1, 3),
+                        help="Analyze every frame (1) or every third frame (3).")
+    parser.add_argument("--use-staged-upload", action="store_true",
+                        help="Process an existing job-owned private upload without copying it again.")
     args = parser.parse_args()
     settings = load_settings()
+    if args.frame_interval is not None:
+        settings = replace(settings, frame_interval=args.frame_interval)
     source = args.video.expanduser().resolve()
     if not source.is_file():
         parser.error("video path must point to an existing file")
@@ -30,11 +37,15 @@ def main() -> int:
     if source.stat().st_size > settings.max_file_size_bytes:
         parser.error("video exceeds the configured upload size limit")
 
-    private_copy = safe_upload_path(settings.uploads_dir, source.suffix)
+    if args.use_staged_upload:
+        if not args.job_id or source.parent != settings.uploads_dir.resolve() or source.stem != args.job_id:
+            parser.error("staged inputs must match the Job ID inside the private uploads directory")
+    private_copy = source if args.use_staged_upload else safe_upload_path(settings.uploads_dir, source.suffix)
     try:
         # Copy into the private workspace before validation and processing; reports expose no source path.
-        with source.open("rb") as src, private_copy.open("xb") as dst:
-            shutil.copyfileobj(src, dst, length=1024 * 1024)
+        if not args.use_staged_upload:
+            with source.open("rb") as src, private_copy.open("xb") as dst:
+                shutil.copyfileobj(src, dst, length=1024 * 1024)
         validate_video_file(private_copy, allowed_extensions=settings.allowed_extensions,
                             max_bytes=settings.max_file_size_bytes, uploads_dir=settings.uploads_dir)
         report = VideoProcessor(settings).process(

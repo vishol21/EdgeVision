@@ -12,6 +12,17 @@
   font-family: 'DM Sans', sans-serif;
 }
 
+select { min-height: 44px; max-width: 100%; padding: 8px 12px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.report-actions, .track-pagination { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.track-pagination { margin-top: 12px; justify-content: space-between; }
+.analysis-summary { font-size: 16px; line-height: 1.6; max-width: 72ch; }
+.report-details { margin: 16px 0; padding: 16px; border: 1px solid var(--border); border-radius: 12px; }
+.report-details summary { cursor: pointer; font-weight: 600; min-height: 30px; }
+.report-details p { max-width: 72ch; color: var(--muted); line-height: 1.7; }
+.event-card .button { margin-top: 12px; }
+#cancel-analysis, #cancel-batch { border-color: var(--accent); }
+@media (max-width: 600px) { .results-subheading { align-items: flex-start; flex-direction: column; } .track-pagination { gap: 8px; } }
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { scroll-behavior: smooth; }

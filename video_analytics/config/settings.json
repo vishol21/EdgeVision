@@ -54,5 +54,12 @@
     "lost_track_timeout_seconds": 2.0,
     "possible_fall_enabled": false
   },
+  "review_moments": {
+    "enabled": true,
+    "speed_diagonals_per_second": 0.2,
+    "motion_confirm_seconds": 0.4,
+    "cooldown_seconds": 8.0,
+    "max_moments": 100
+  },
   "regions": []
 }

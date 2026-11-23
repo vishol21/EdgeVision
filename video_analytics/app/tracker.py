@@ -20,6 +20,8 @@ class ByteTrackTracker:
             lambda: deque(maxlen=self.history_max_points)
         )
         self.observation_counts: dict[int, int] = defaultdict(int)
+        self.first_seen: dict[int, float] = {}
+        self.path_lengths: dict[int, float] = defaultdict(float)
 
     def update(self, frame: Any, *, frame_index: int, timestamp_seconds: float) -> list[TrackObservation]:
         result = self.detector.track_frame(frame)
@@ -44,7 +46,13 @@ class ByteTrackTracker:
                 center_xy=((x1 + x2) / 2.0, (y1 + y2) / 2.0),
             )
             observations.append(observation)
-            self.history[observation.tracking_id].append(observation)
+            previous = self.history[observation.tracking_id]
+            if previous:
+                self.path_lengths[observation.tracking_id] += hypot(
+                    observation.center_xy[0] - previous[-1].center_xy[0],
+                    observation.center_xy[1] - previous[-1].center_xy[1])
+            self.first_seen.setdefault(observation.tracking_id, timestamp_seconds)
+            previous.append(observation)
             self.observation_counts[observation.tracking_id] += 1
         return observations
 
@@ -62,11 +70,11 @@ class ByteTrackTracker:
             summaries.append({
                 "trackingId": tracking_id,
                 "objectClass": points[-1].object_class,
-                "firstSeenSeconds": points[0].timestamp_seconds,
+                "firstSeenSeconds": self.first_seen.get(tracking_id, points[0].timestamp_seconds),
                 "lastSeenSeconds": points[-1].timestamp_seconds,
                 "observedFrames": self.observation_counts[tracking_id],
                 "historyPointsStored": len(points),
-                "movementDistancePixels": round(path_length, 3),
+                "movementDistancePixels": round(self.path_lengths.get(tracking_id, path_length), 3),
                 "movementHistory": [
                     {"timestampSeconds": point.timestamp_seconds,
                      "centerX": round(point.center_xy[0], 3),

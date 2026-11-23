@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +33,7 @@ class Settings:
     regions: tuple[Region, ...]
     model_auto_download: bool
     model_assets_release: str
+    review_moments: dict[str, Any] = field(default_factory=dict)
 
     @property
     def uploads_dir(self) -> Path:
@@ -126,6 +127,18 @@ def load_settings(path: Path | None = None) -> Settings:
     history_max_points = int(tracking.get("history_max_points", 300))
     if history_max_points < 2:
         raise ValueError("tracking.history_max_points must be at least 2.")
+    review_options = raw.get("review_moments", {})
+    if not isinstance(review_options, dict):
+        raise ValueError("review_moments must be an object.")
+    for key, default in (("speed_diagonals_per_second", 0.2), ("motion_confirm_seconds", 0.4), ("cooldown_seconds", 8.0)):
+        value = review_options.get(key, default)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+            raise ValueError(f"review_moments.{key} must be finite and positive.")
+    limit = review_options.get("max_moments", 100)
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 500:
+        raise ValueError("review_moments.max_moments must be an integer from 1 to 500.")
+    if not isinstance(review_options.get("enabled", True), bool):
+        raise ValueError("review_moments.enabled must be boolean.")
     return Settings(
         project_root=project_root,
         confidence=confidence,
@@ -153,4 +166,5 @@ def load_settings(path: Path | None = None) -> Settings:
         regions=tuple(regions),
         model_auto_download=bool(detection.get("auto_download", False)),
         model_assets_release=str(detection.get("assets_release", "v8.4.0")),
+        review_moments=dict(raw.get("review_moments", {})),
     )

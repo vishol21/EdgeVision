@@ -144,7 +144,18 @@ final class VideoWorkloadProfile {
 
     int simulationHorizon() {
         double finalEmission = 1.0 + (tupleCount - 1) * tupleIntervalSeconds;
-        return (int) Math.max(2_000L, (long) Math.ceil(finalEmission + 3 * 100 + 10));
+        // Emissions finishing is not the same as the queued application finishing.
+        // Allow conservative CPU and serialized-network drain on the slower fog
+        // device. Both placements use the same input-derived horizon. Keep the
+        // established minimum for small profiles and reject unsupported ranges.
+        double cpuPerTuple = (double) analyzerMiPerTuple() + eventDetectorMiPerTuple() + 500.0;
+        double payloadPerTuple = cameraPayloadBytes() + 2500.0;
+        double drain = tupleCount * (4.0 * cpuPerTuple / 2800.0 + 2.0 * payloadPerTuple / 10000.0);
+        double horizon = Math.max(2000.0, Math.ceil(finalEmission + drain + 500.0));
+        if (!Double.isFinite(horizon) || horizon >= Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Video workload exceeds the supported simulation horizon.");
+        }
+        return (int) horizon;
     }
 
     @SuppressWarnings("unchecked")

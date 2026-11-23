@@ -19,6 +19,8 @@
     batchReports: {},
     batchReportErrors: {},
     reportVersion: 0,
+    operation: null,
+    trackPage: 0,
     batchLimits: { maxCameras: 10, maxTotalBytes: 1073741824, maxFileBytes: 524288000, maxCombinedTuples: 100000 },
     video: { file: null, previewUrl: null, jobId: null, report: null, reportJobId: null, workloadProfile: null, simulationStatus: 'not_started', simulationError: null, comparison: null }
   };
@@ -43,6 +45,16 @@
     buttons.forEach(button => { button.disabled = state.running || profileSelected; });
     cameraCountInput.disabled = state.running || profileSelected;
     analyzeButton.disabled = state.running || !state.video.file;
+    const retryButton = document.querySelector('#retry-comparison');
+    retryButton.hidden = !state.video.report || state.video.reportJobId !== state.video.jobId ||
+      state.video.report.batchId || !['failed', 'cancelled'].includes(state.video.simulationStatus);
+    retryButton.disabled = state.running;
+    document.querySelector('#analysis-mode').disabled = state.running;
+    for (const [id, kind] of [['#cancel-analysis', 'single'], ['#cancel-batch', 'batch']]) {
+      const button = document.querySelector(id);
+      button.hidden = !state.running || state.operation?.kind !== kind;
+      button.disabled = Boolean(state.operation?.cancelRequested);
+    }
     batchButton.disabled = state.running || Boolean(batchSelectionError());
     document.querySelector('#clear-batch-selection').disabled = state.running || !state.batchFiles.length;
     batchFileInput.disabled = state.running;
@@ -483,9 +495,9 @@
       const included = batch.cameras.filter(camera => camera.status === 'completed').length;
       const people = summary?.objectCountsByClass?.person || {};
       const vehicleClasses = ['car', 'bus', 'motorcycle'];
-      const vehicles = vehicleClasses.reduce((total, name) => total + Number(summary?.objectCountsByClass?.[name]?.trackedObservations || 0), 0);
+      const vehicles = vehicleClasses.reduce((total, name) => total + Number(summary?.objectCountsByClass?.[name]?.uniqueTrackingIds || 0), 0);
       document.querySelector('#batch-summary').textContent = summary
-        ? `Batch ${batch.batchId}: ${included}/${batch.cameras.length} camera analyses succeeded. ${format(batch.simulation.workloadProfile?.tupleCount ?? 0, 0)} combined tuples. People: ${format(people.trackedObservations || 0, 0)} track observations; ${format(people.uniqueTrackingIds || 0, 0)} summed camera-scoped IDs. Vehicle observations: ${format(vehicles, 0)}. Rule events: ${format(summary.eventCount, 0)}. Sum of per-camera processing durations: ${format(summary.processingDurationSecondsSum)} s. Track IDs are not deduplicated across cameras; zero events do not establish safety.`
+        ? `Batch ${batch.batchId}: ${included}/${batch.cameras.length} recordings analyzed. ${format(batch.simulation.workloadProfile?.tupleCount ?? 0, 0)} combined tuples. People tracks: ${format(people.uniqueTrackingIds || 0, 0)}. Vehicle tracks: ${format(vehicles, 0)}. Review moments: ${format(summary.eventCount, 0)}. Tracks are counted separately in each recording.`
         : `${batch.cameras.length} recordings selected. Camera processing is sequential; failed inputs will remain listed.`;
     } else document.querySelector('#batch-summary').textContent = `${cameras.length} recording${cameras.length === 1 ? '' : 's'} selected.`;
   }
@@ -500,6 +512,9 @@
       state.video.simulationStatus = batch.simulation.status;
       renderAll();
       if (!['draft', 'processing', 'simulation_running'].includes(batch.status)) {
+        if (batch.status === 'cancelled') {
+          cancelledMessage(); await restoreBatchReports(batch); break;
+        }
         applyVideoSimulation(batch.simulation, id);
         const success = ['completed', 'partial_success'].includes(batch.status);
         statusText.textContent = success ? (batch.status === 'partial_success' ? 'Partial success' : 'Complete') : 'Failed';
@@ -516,6 +531,8 @@
   async function analyzeBatch() {
     if (state.running || batchSelectionError()) return;
     const files = [...state.batchFiles];
+    const operation = { kind: 'batch', id: null, cancelRequested: false };
+    state.operation = operation;
     batchError.hidden = true;
     clearDisplayedReport(); state.batchReports = {}; state.batchReportErrors = {};
     state.comparisonMode = 'standalone';
@@ -525,12 +542,15 @@
     try {
       const created = await fetchVideoJson('/api/video/batches', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cameras: files.map(file => ({ filename: file.name, sizeBytes: file.size })) }) });
+        body: JSON.stringify({ cameras: files.map(file => ({ filename: file.name, sizeBytes: file.size })), frameInterval: Number(document.querySelector('#analysis-mode').value) || 1 }) });
       const id = created.batchId;
+      operation.id = id;
+      if (operation.cancelRequested) { await finishCancellation(operation); return; }
       selectProfileComparison(id);
       state.batch = created;
       renderBatch(created);
       for (let index = 0; index < files.length; index++) {
+        if (operation.cancelRequested) { await finishCancellation(operation); return; }
         const camera = created.cameras[index];
         if (camera.status !== 'awaiting_upload') continue;
         batchStatus.textContent = `Uploading recording ${index + 1}/${files.length}: ${files[index].name}`;
@@ -545,20 +565,26 @@
         state.batch = await fetchVideoJson(`/api/video/batches/${id}`);
         renderBatch(state.batch);
       }
+      if (operation.cancelRequested) { await finishCancellation(operation); return; }
       await fetchVideoJson(`/api/video/batches/${id}/run`, { method: 'POST' });
       await pollBatch(id);
     } catch (error) {
+      if (operation.cancelRequested) {
+        try { await finishCancellation(operation); return; }
+        catch (cancelError) { error = cancelError; }
+      }
       batchError.textContent = error.message; batchError.hidden = false;
       batchStatus.textContent = 'The batch did not complete. Completed camera artifacts remain on the server.';
       statusText.textContent = 'Failed'; statusDetail.textContent = error.message;
       setFeedback('The camera batch did not complete. Check its error.', 'error');
-    } finally { setRunning(false); }
+    } finally { state.operation = null; setRunning(false); }
   }
 
   function renderVideoReport(report, jobId) {
     state.video.report = report;
     state.video.reportJobId = jobId;
-    document.querySelector('#video-report-context').textContent = `Individual recording report · Job ${jobId}. Track IDs belong to this recording only.`;
+    state.trackPage = 0;
+    document.querySelector('#video-report-context').textContent = `Recording: ${report.sourceName || 'Saved recording'} · Report ID ${jobId}`;
     const outputUrl = report.video?.outputUrl;
     const player = document.querySelector('#saved-video');
     player.pause?.(); player.removeAttribute?.('src');
@@ -584,13 +610,23 @@
     document.querySelector('#vehicle-tracks').textContent = format(sum(vehicleClasses, 'uniqueTrackingIds'), 0);
     document.querySelector('#video-fps').textContent = format(report.processing?.processingFps);
     document.querySelector('#video-duration').textContent = format(report.processing?.processingDurationSeconds);
-    document.querySelector('#event-total').textContent = format(report.eventCount, 0);
+    const reviewEvents = (Array.isArray(report.events) ? report.events : []).filter(event => event.event_type !== 'person_visible');
+    document.querySelector('#event-total').textContent = format(reviewEvents.length, 0);
+    document.querySelector('#analysis-summary').textContent = `${format(unique('person'), 0)} people tracks and ${format(sum(vehicleClasses, 'uniqueTrackingIds'), 0)} vehicle tracks. ${format(reviewEvents.length, 0)} moments marked for review. These are recording-scoped tracks and review suggestions, not confirmed incidents.`;
 
     const ruleCoverage = report.ruleCoverage || {};
     const note = document.querySelector('#video-rule-note');
-    note.textContent = ruleCoverage.note || (ruleCoverage.rulesEnabled?.length
+    note.textContent = (ruleCoverage.status === 'not_configured' ? 'Scene-specific rules were not set for this recording.' : (ruleCoverage.rulesEnabled?.length
       ? `Rules evaluated: ${ruleCoverage.rulesEnabled.join(', ')}.`
-      : 'No anomaly rules were configured for this run.');
+      : 'No scene-specific rules were evaluated.')) + (ruleCoverage.reviewSuggestionsEnabled
+        ? ' Movement and posture cues are suggestions for review, not confirmed crimes or accidents. Ordinary person sightings are excluded.'
+        : ruleCoverage.reviewSuggestionsEnabled === false ? ' Automatic review markers were disabled for this run.'
+          : ' This saved report predates automatic review markers. Analyze a new recording to use them.');
+    if (ruleCoverage.reviewSuggestionLimit && ruleCoverage.reviewSuggestionCount >= ruleCoverage.reviewSuggestionLimit) {
+      note.textContent += ` The ${ruleCoverage.reviewSuggestionLimit}-marker limit was reached; later moments may not be indexed.`;
+    }
+    const presenceCount = (report.events || []).filter(event => event.event_type === 'person_visible').length;
+    if (presenceCount) note.textContent += ` ${presenceCount} ordinary person sightings from this saved report were excluded from the review list. The original JSON is unchanged; run a new analysis for the newer posture and vehicle-contact checks.`;
 
     const vehicleBody = document.querySelector('#vehicle-table');
     vehicleBody.replaceChildren();
@@ -602,42 +638,16 @@
       vehicleBody.append(row);
     }
 
-    const tracks = Array.isArray(report.trackingSummaries) ? report.trackingSummaries : [];
-    const trackBody = document.querySelector('#tracking-table');
-    trackBody.replaceChildren();
-    for (const track of tracks.slice(0, 250)) {
-      const row = document.createElement('tr');
-      addCell(row, track.trackingId);
-      addCell(row, track.objectClass);
-      addCell(row, format(track.firstSeenSeconds));
-      addCell(row, format(track.lastSeenSeconds));
-      trackBody.append(row);
-    }
-    if (tracks.length > 250) {
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 4;
-      cell.textContent = `Showing first 250 of ${tracks.length} IDs. Download the JSON report for all tracks.`;
-      row.append(cell);
-      trackBody.append(row);
-    }
-    if (!tracks.length) {
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 4;
-      cell.textContent = 'No tracked objects were returned by the detector.';
-      row.append(cell);
-      trackBody.append(row);
-    }
+    renderTracks();
 
     const eventList = document.querySelector('#event-list');
     eventList.replaceChildren();
-    const events = Array.isArray(report.events) ? report.events : [];
+    const events = reviewEvents;
     if (!events.length) {
       const empty = document.createElement('p');
       empty.className = 'event-empty';
-      empty.textContent = report.eventCount === 0
-        ? `No unusual activity events were reported.${ruleCoverage.status === 'not_configured' ? ' Region-based rules were not evaluated because no regions are configured.' : ''}`
+      empty.textContent = events.length === 0
+        ? `No review moments were recorded. This does not establish safety.${ruleCoverage.status === 'not_configured' ? ' Scene-specific rules were not configured.' : ''}`
         : 'No event details are available in this report.';
       eventList.append(empty);
     }
@@ -653,7 +663,7 @@
       }
       const details = document.createElement('div');
       const title = document.createElement('h4');
-      title.textContent = String(event.event_type || 'Unusual activity');
+      title.textContent = ({ possible_vehicle_collision_review: 'Possible vehicle collision — review required', possible_fall_review: 'Possible person fall — review required', rapid_movement_review: 'Rapid movement — review suggested' })[event.event_type] || String(event.event_type || 'Configured activity rule').replaceAll('_', ' ');
       details.append(title);
       const summary = document.createElement('p');
       const location = event.region?.name ? ` · ${event.region.name}` : '';
@@ -664,12 +674,83 @@
         reason.textContent = event.details.reason;
         details.append(reason);
       }
+      const seek = document.createElement('button');
+      seek.className = 'button'; seek.type = 'button';
+      seek.textContent = `Review at ${format(event.timestamp_seconds)} s`;
+      seek.disabled = !validOutput;
+      seek.addEventListener('click', () => {
+        const unavailable = () => {
+          document.querySelector('#saved-video-error').textContent = 'Playback is unavailable here. Open or download the video and seek to this timestamp.';
+          document.querySelector('#saved-video-error').hidden = false;
+        };
+        try {
+          player.currentTime = Math.max(0, Number(event.timestamp_seconds) || 0);
+          player.play?.()?.catch?.(unavailable);
+        } catch { unavailable(); }
+      });
+      details.append(seek);
       card.append(details);
       eventList.append(card);
     }
 
     document.querySelector('#report-download').href = `/api/video/results/${jobId}?download=1`;
     videoResults.hidden = false;
+  }
+
+  function renderTracks() {
+    const filter = document.querySelector('#track-filter').value || 'all';
+    const tracks = [...(state.video.report?.trackingSummaries || [])]
+      .filter(track => filter === 'all' || (filter === 'person' ? track.objectClass === 'person' : ['car', 'bus', 'motorcycle'].includes(track.objectClass)))
+      .sort((a, b) => Number(b.objectClass === 'person') - Number(a.objectClass === 'person') || a.firstSeenSeconds - b.firstSeenSeconds || a.trackingId - b.trackingId);
+    const pages = Math.max(1, Math.ceil(tracks.length / 10));
+    state.trackPage = Math.max(0, Math.min(state.trackPage, pages - 1));
+    const body = document.querySelector('#tracking-table'); body.replaceChildren();
+    for (const track of tracks.slice(state.trackPage * 10, state.trackPage * 10 + 10)) {
+      const row = document.createElement('tr');
+      for (const value of [track.trackingId, track.objectClass, format(track.firstSeenSeconds), format(track.lastSeenSeconds)]) addCell(row, value);
+      body.append(row);
+    }
+    if (!tracks.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 4; cell.textContent = 'No matching tracks in this report.'; row.append(cell); body.append(row); }
+    document.querySelector('#track-page-info').textContent = `${tracks.length} tracks · Page ${state.trackPage + 1} of ${pages}`;
+    document.querySelector('#tracks-previous').disabled = state.trackPage === 0;
+    document.querySelector('#tracks-next').disabled = state.trackPage + 1 === pages;
+  }
+
+  function cancelledMessage() {
+    videoProgress.hidden = true; setRunning(false);
+    videoStatus.textContent = batchStatus.textContent = 'Cancelled. Completed reports are kept; you can start another analysis.';
+    statusText.textContent = 'Cancelled'; statusDetail.textContent = 'Processing stopped.';
+    setFeedback('Analysis cancelled.');
+  }
+
+  async function requestCancellation(operation) {
+    operation.cancelRequested = true; renderControls();
+    videoStatus.textContent = batchStatus.textContent = 'Stopping processing…';
+    if (!operation.id) return;
+    if (!operation.cancelPromise) operation.cancelPromise = (async () => {
+      const url = operation.kind === 'batch' ? `/api/video/batches/${operation.id}/cancel` : `/api/video/cancel/${operation.id}`;
+      // An upload may not have reached the server when the user presses Cancel.
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const response = await fetch(url, { method: 'POST' });
+        const result = await response.json().catch(() => ({}));
+        if (response.ok) return;
+        if (response.status !== 404 || attempt === 19) throw new Error(result.message || 'Could not cancel this recording.');
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    })();
+    try { await operation.cancelPromise; }
+    catch (error) { operation.cancelRequested = false; operation.cancelPromise = null; renderControls(); throw error; }
+  }
+
+  async function finishCancellation(operation) {
+    await requestCancellation(operation);
+    const url = operation.kind === 'batch' ? `/api/video/batches/${operation.id}` : `/api/video/status/${operation.id}`;
+    for (;;) {
+      const result = await fetchVideoJson(url);
+      if (['cancelled', 'completed', 'partial_success', 'failed', 'simulation_failed'].includes(result.status)) break;
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    cancelledMessage();
   }
 
   async function pollVideoJob(jobId) {
@@ -680,6 +761,7 @@
       state.video.workloadProfile = job.workloadProfile || state.video.workloadProfile;
       state.video.simulationStatus = job.simulationStatus || 'not_started';
       state.video.simulationError = job.simulationError || null;
+      if (job.status === 'cancelled') { cancelledMessage(); return; }
       if (job.analysisStatus === 'completed' && state.video.reportJobId !== jobId) {
         renderVideoReport(await fetchVideoJson(`/api/video/results/${jobId}`), jobId);
       }
@@ -713,6 +795,9 @@
 
   async function analyzeSelectedVideo() {
     if (!state.video.file || analyzeButton.disabled || state.running) return;
+    const id = globalThis.crypto?.randomUUID?.().replaceAll('-', '') || Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    const operation = { kind: 'single', id, cancelRequested: false };
+    state.operation = operation;
     videoError.hidden = true;
     videoResults.hidden = true;
     analyzeButton.disabled = true;
@@ -724,11 +809,12 @@
       const file = state.video.file;
       const uploadResponse = await fetch(`${API_ROOT}/video/upload`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name) },
+        headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name), 'X-Job-Id': id },
         body: file
       });
       const uploaded = await uploadResponse.json().catch(() => ({}));
       if (!uploadResponse.ok) throw new Error(uploaded.message || `Video upload failed (HTTP ${uploadResponse.status}).`);
+      if (operation.cancelRequested) { await finishCancellation(operation); return; }
       selectProfileComparison(uploaded.jobId);
       state.video.report = null;
       state.video.reportJobId = null;
@@ -737,10 +823,14 @@
       await fetchVideoJson(`${API_ROOT}/video/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: uploaded.jobId })
+        body: JSON.stringify({ jobId: uploaded.jobId, frameInterval: Number(document.querySelector('#analysis-mode').value) || 1 })
       });
       await pollVideoJob(uploaded.jobId);
     } catch (error) {
+      if (operation.cancelRequested) {
+        try { await finishCancellation(operation); return; }
+        catch (cancelError) { error = cancelError; }
+      }
       videoError.textContent = readableVideoError(error.message) || 'Video analysis failed.';
       videoError.hidden = false;
       videoStatus.textContent = 'Analysis did not complete.';
@@ -751,7 +841,7 @@
       document.querySelector('#run-detail').textContent = 'Video analysis did not complete. Check the error and try again.';
       setFeedback('Video analysis did not complete.', 'error');
       renderAll();
-    }
+    } finally { state.operation = null; renderControls(); }
   }
 
   videoDropzone.addEventListener('click', () => videoFileInput.click());
@@ -770,6 +860,47 @@
     chooseVideo(event.dataTransfer?.files?.[0]);
   });
   analyzeButton.addEventListener('click', analyzeSelectedVideo);
+  document.querySelector('#retry-comparison').addEventListener('click', async () => {
+    if (state.running || !state.video.reportJobId) return;
+    const id = state.video.reportJobId;
+    state.operation = { kind: 'single', id, cancelRequested: false };
+    videoError.hidden = true; videoProgress.hidden = false;
+    setRunning(true, 'Retrying the saved workload comparison. Video analysis will not run again.');
+    try {
+      await fetchVideoJson(`/api/video/simulation/${id}/retry`, { method: 'POST' });
+      await pollVideoJob(id);
+    } catch (error) {
+      videoError.textContent = error.message; videoError.hidden = false;
+      videoProgress.hidden = true; setRunning(false);
+    } finally { state.operation = null; renderControls(); }
+  });
+  for (const selector of ['#cancel-analysis', '#cancel-batch']) document.querySelector(selector).addEventListener('click', async () => {
+    const operation = state.operation;
+    if (!operation || operation.cancelRequested) return;
+    try { await requestCancellation(operation); }
+    catch (error) { videoError.textContent = error.message; videoError.hidden = false; }
+  });
+  document.querySelector('#track-filter').addEventListener('change', () => { state.trackPage = 0; renderTracks(); });
+  document.querySelector('#tracks-previous').addEventListener('click', () => { state.trackPage--; renderTracks(); });
+  document.querySelector('#tracks-next').addEventListener('click', () => { state.trackPage++; renderTracks(); });
+  document.querySelector('#readable-report').addEventListener('click', () => {
+    const report = state.video.report;
+    if (!report) return;
+    const counts = report.objectCountsByClass || {};
+    const vehicles = ['car', 'bus', 'motorcycle'].reduce((sum, name) => sum + Number(counts[name]?.uniqueTrackingIds || 0), 0);
+    const text = ['EDGEVISION RECORDING REPORT', `Recording: ${report.sourceName || 'Saved recording'}`,
+      `Report ID: ${state.video.reportJobId}`, `People tracks: ${counts.person?.uniqueTrackingIds || 0}`, `Vehicle tracks: ${vehicles}`,
+      `Processing time: ${format(report.processing?.processingDurationSeconds)} seconds`,
+      `Sampling: every ${report.video?.frameInterval || 1} frame(s)`,
+      `Scene rules: ${report.ruleCoverage?.rulesEnabled?.join(', ') || 'Not configured'}`,
+      '', 'MOMENTS TO REVIEW', ...(report.events || []).filter(event => event.event_type !== 'person_visible').map(event => `${format(event.timestamp_seconds)} s | ${event.event_type} | ${event.object_class} | ${event.details?.reason || 'Configured scene rule'}`),
+      '', 'INTERPRETATION', 'YOLO locates objects; ByteTrack links their appearances. Tracks are not verified unique people.',
+      'Movement, posture and vehicle-contact cues are unvalidated suggestions for human review. This system does not confirm robbery, collisions or safety.',
+      report.ruleCoverage?.note || '', 'The annotated video contains detection boxes and track IDs; the separate cloud/edge simulation uses workload profiles, not video frames.'].join('\n');
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = `edgevision-${state.video.reportJobId}-summary.txt`; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
   batchFileInput.addEventListener('change', () => {
     if (state.running) return;
     const additions = [...(batchFileInput.files || [])];
@@ -783,7 +914,7 @@
   });
   document.querySelector('#saved-video').addEventListener('error', () => {
     if (!document.querySelector('#saved-video-wrap').hidden) {
-      document.querySelector('#saved-video-error').textContent = 'This browser could not play the saved annotated video. Use Open or Download below to view it in a compatible player. Its saved-artifact link does not require the original upload.';
+      document.querySelector('#saved-video-error').textContent = 'This browser cannot play this video codec. Open or download it to watch in a compatible player.';
       document.querySelector('#saved-video-error').hidden = false;
     }
   });
@@ -923,4 +1054,22 @@
       document.querySelector('#batch-limits-note').textContent = `Choose 2-${limits.maxCameras} uploaded recordings, one per camera. Up to ${limitSize(limits.maxFileBytes)} per file, ${limitSize(limits.maxTotalBytes)} total and ${format(limits.maxCombinedTuples, 0)} combined tuples. Processing is sequential; only successful cameras are simulated together. Recording start times are modeled together, without assuming synchronized footage.`;
     }
   }).catch(() => { /* API availability is reported by the health check. */ });
+  // An explicit saved-job link restores analytics without uploading or running inference.
+  if (window.location?.search) {
+    const id = new URLSearchParams(window.location.search).get('job');
+    if (id && /^[a-f0-9]{32}$/.test(id)) (async () => {
+      setRunning(true, 'Loading the saved recording.');
+      try {
+        const job = await fetchVideoJson(`/api/video/status/${id}`);
+        if (job.analysisStatus !== 'completed' || job.batchId) throw new Error('This link needs a completed individual recording report.');
+        selectProfileComparison(id);
+        renderVideoReport(await fetchVideoJson(`/api/video/results/${id}`), id);
+        applyVideoSimulation(await fetchVideoJson(`/api/video/simulation/${id}`), id);
+        videoStatus.textContent = job.message;
+        statusText.textContent = job.simulationStatus === 'completed' ? 'Complete' : 'Comparison unavailable';
+        statusDetail.textContent = job.simulationError || job.message;
+      } catch (error) { videoError.textContent = error.message; videoError.hidden = false; }
+      finally { setRunning(false); }
+    })();
+  }
 })();

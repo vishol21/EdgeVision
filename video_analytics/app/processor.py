@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
+import json
 from collections import Counter, defaultdict
 from dataclasses import replace
 from pathlib import Path
@@ -15,6 +16,7 @@ from .detector import YoloDetector
 from .report import AnalyticsReport, write_report
 from .security import validate_video_file
 from .tracker import ByteTrackTracker
+from .review_moments import ReviewMoments
 from .workload_profile import build_workload_profile, safe_display_filename, write_workload_profile
 
 
@@ -57,6 +59,7 @@ class VideoProcessor:
         job_output = self.settings.outputs_dir / job_id
         job_evidence = self.settings.evidence_dir / job_id
         model_load_started = time.perf_counter()
+        print('Stage: loading_model', flush=True)
         try:
             detector = YoloDetector(self.settings, tracker_yaml=self._tracker_config_path())
         except Exception:
@@ -80,11 +83,14 @@ class VideoProcessor:
         observation_counts: Counter[str] = Counter()
         observed_track_ids: dict[str, set[int]] = defaultdict(set)
         events = []
+        review = ReviewMoments(self.settings.review_moments)
+        last_progress = 0.0
         frame_index = 0
         processed_frames = 0
         yolo_tracker_wall_seconds = 0.0
         anomaly_engine_wall_seconds = 0.0
         inference_started = time.perf_counter()
+        print('Stage: processing', flush=True)
         try:
             while True:
                 ok, frame = capture.read()
@@ -98,6 +104,7 @@ class VideoProcessor:
                     yolo_tracker_wall_seconds += time.perf_counter() - detector_started
                     anomaly_started = time.perf_counter()
                     new_events = self.anomaly_engine.update(observations, timestamp, frame)
+                    new_events += review.update(observations, timestamp, frame)
                     anomaly_engine_wall_seconds += time.perf_counter() - anomaly_started
                     for observation in observations:
                         observation_counts[observation.object_class] += 1
@@ -117,6 +124,12 @@ class VideoProcessor:
                     events.extend(annotated_events)
                     writer.write(frame)
                     processed_frames += 1
+                    now = time.perf_counter()
+                    if now - last_progress >= 1.0:
+                        print('Progress: ' + json.dumps({"decodedFrames": frame_index + 1,
+                              "sourceFrames": source_reported_frame_count,
+                              "processedFrames": processed_frames}), flush=True)
+                        last_progress = now
                 frame_index += 1
         except Exception:
             capture.release()
@@ -147,7 +160,11 @@ class VideoProcessor:
                 "license": detector.model_manifest["license"],
                 "classFilter": list(self.settings.supported_classes),
             },
-            rule_coverage=self.anomaly_engine.coverage(),
+            rule_coverage={**self.anomaly_engine.coverage(),
+                           "reviewSuggestionsEnabled": review.enabled,
+                           "reviewSuggestionCount": review.count,
+                           "reviewSuggestionLimit": review.limit,
+                           "reviewSuggestionNote": "Temporal movement, posture and vehicle-contact cues for human review; unvalidated heuristics, not confirmed robbery or accident detection."},
             video={
                 "width": width,
                 "height": height,

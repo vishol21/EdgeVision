@@ -25,17 +25,17 @@
     </aside>
 
     <main class="main-content">
-      <header class="topbar"><span>FINAL YEAR PROJECT <span class="separator">/</span> EDGE COMPUTING</span><span class="topbar-state"><span class="status-light"></span> EDGEVISION</span></header>
+      <header class="topbar"><span>Video workspace</span><span class="topbar-state"><span class="status-light"></span> EDGEVISION</span></header>
 
       <section class="section dashboard-section" id="dashboard">
         <div class="page-title">
-          <div><div class="eyebrow">EDGE COMPUTING · VIDEO ANALYTICS</div><h1>EdgeVision</h1><p>Local video analysis with YOLO and ByteTrack, alongside a separate iFogSim cloud-versus-edge study.</p></div>
+          <div><h1>EdgeVision</h1><p>Review recordings, follow people and vehicles, and explore moments that need a closer look.</p></div>
           <div class="status-card"><span class="label">SIMULATION STATUS</span><strong id="run-status">Ready</strong><span id="run-detail">No simulation is running.</span></div>
         </div>
       </section>
 
       <section class="section" id="video-analytics">
-        <div class="section-heading"><div><div class="eyebrow">LOCAL PYTHON PROCESSING</div><h2>Video Analytics</h2></div><p>Upload a video to run YOLO detection, ByteTrack tracking and configured activity rules.</p></div>
+        <div class="section-heading"><div><h2>Upload video</h2></div><p>Find people, vehicles and review timestamps. Robbery and accident classification are not supported.</p></div>
         <div class="panel upload-panel">
           <div id="video-dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose or drop a video to analyze">
             <input id="video-file" type="file" accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,video/*" hidden>
@@ -46,38 +46,42 @@
             <div class="video-preview-wrap"><video id="video-preview" controls playsinline preload="metadata"></video></div>
             <div class="selected-file"><span id="selected-filename"></span><small id="selected-filesize"></small></div>
           </div>
-          <div class="video-actions"><button id="analyze-button" class="button button-edge" disabled>Start Analysis</button><span id="video-status" role="status" aria-live="polite">Choose a video to begin.</span></div>
+          <label for="analysis-mode">Analysis detail</label>
+          <select id="analysis-mode"><option value="1">Detailed — every frame</option><option value="3">Faster — every third frame</option></select>
+          <p class="simulation-note">Faster mode reduces detection work but can miss brief activity or lose tracks. Both modes analyze on this computer.</p>
+          <div class="video-actions"><button id="analyze-button" class="button button-edge" disabled>Start Analysis</button><button id="cancel-analysis" class="button" type="button" hidden>Cancel analysis</button><span id="video-status" role="status" aria-live="polite">Choose a video to begin.</span></div>
           <div id="video-progress" class="progress-track" hidden><span></span></div>
           <p id="video-error" class="video-error" role="alert" hidden></p>
         </div>
 
         <div id="video-results" class="video-results" hidden>
-          <div class="section-heading results-subheading"><div><div class="eyebrow">ACTUAL PROCESSOR REPORT</div><h2>Analysis Results</h2></div><a id="report-download" class="button" href="#" download>Download JSON report</a></div>
+          <div class="section-heading results-subheading"><div><h2>Results</h2></div><div class="report-actions"><button id="retry-comparison" class="button" type="button" hidden>Retry comparison only</button><button id="readable-report" class="button" type="button">Download summary report</button><a id="report-download" class="button" href="#" download>Full data (JSON)</a></div></div>
+          <p id="analysis-summary" class="analysis-summary"></p>
           <p id="video-rule-note" class="simulation-note"></p>
           <p id="video-report-context" class="simulation-note"></p>
           <div id="saved-video-wrap" class="video-preview-wrap" hidden><video id="saved-video" controls playsinline preload="metadata" aria-label="Annotated video for the displayed recording report"></video></div>
           <p id="saved-video-error" class="video-error" role="alert" hidden></p>
-          <p id="saved-video-links" class="simulation-note" hidden><a id="saved-video-open" target="_blank" rel="noopener">Open saved annotated video</a> · <a id="saved-video-download" download>Download annotated video</a></p>
+          <p id="saved-video-links" class="simulation-note" hidden><a id="saved-video-open" target="_blank" rel="noopener">Open video</a> · <a id="saved-video-download" download>Download video</a></p>
           <div class="analytics-metrics">
-            <article class="result-card"><span>PEOPLE DETECTIONS / TRACK OBSERVATIONS</span><strong id="people-detections">—</strong></article>
-            <article class="result-card"><span>UNIQUE PEOPLE TRACK IDs</span><strong id="people-tracks">—</strong></article>
-            <article class="result-card"><span>VEHICLE DETECTIONS / TRACK OBSERVATIONS</span><strong id="vehicle-detections">—</strong></article>
-            <article class="result-card"><span>UNIQUE VEHICLE TRACK IDs</span><strong id="vehicle-tracks">—</strong></article>
-            <article class="result-card"><span>PROCESSING SPEED</span><strong><span id="video-fps">—</span> <small>FPS</small></strong></article>
-            <article class="result-card"><span>PROCESSING DURATION</span><strong><span id="video-duration">—</span> <small>s</small></strong></article>
-            <article class="result-card"><span>UNUSUAL ACTIVITY EVENTS</span><strong id="event-total">—</strong></article>
+            <article class="result-card"><span>People tracks</span><strong id="people-tracks">—</strong></article>
+            <article class="result-card"><span>Vehicle tracks</span><strong id="vehicle-tracks">—</strong></article>
+            <article class="result-card"><span>Review moments</span><strong id="event-total">—</strong></article>
+            <article class="result-card"><span>Processing time</span><strong><span id="video-duration">—</span> <small>s</small></strong></article>
           </div>
-          <div class="analytics-breakdown">
+          <details class="report-details"><summary>How these results work</summary><p>YOLO locates people and vehicles in sampled frames. ByteTrack links detections into tracks. A track is not a verified unique person: occlusion can split it. Review moments flag sustained rapid movement, upright-to-wide person posture changes, possible vehicle contact with abrupt motion change, or configured scene rules. These image-space cues can be wrong and cannot confirm robbery, accidents or safety.</p><p>Repeated observations: <span id="people-detections">—</span> people, <span id="vehicle-detections">—</span> vehicles. Processing speed: <span id="video-fps">—</span> FPS. Observations count repeated appearances across frames.</p></details>
+          <details class="report-details"><summary>Object details</summary><div class="analytics-breakdown">
             <div class="panel">
               <div class="panel-heading"><h3>Vehicle detections</h3><span>Tracked observations · unique IDs</span></div>
               <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Class</th><th>Observations</th><th>Unique IDs</th></tr></thead><tbody id="vehicle-table"></tbody></table></div>
             </div>
             <div class="panel">
-              <div class="panel-heading"><h3>Tracked objects</h3><span>IDs reported by ByteTrack</span></div>
+              <div class="panel-heading"><h3>Tracks</h3><span>People first, then first appearance</span></div>
+              <label for="track-filter">Show tracks</label><select id="track-filter"><option value="all">All objects</option><option value="person">People</option><option value="vehicles">Vehicles</option></select>
               <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Track ID</th><th>Class</th><th>First seen (s)</th><th>Last seen (s)</th></tr></thead><tbody id="tracking-table"></tbody></table></div>
+              <div class="track-pagination"><button id="tracks-previous" class="button" type="button">Previous</button><span id="track-page-info" aria-live="polite"></span><button id="tracks-next" class="button" type="button">Next</button></div>
             </div>
-          </div>
-          <div class="panel event-panel"><div class="panel-heading"><h3>Unusual activity events</h3><span>Configured rules only</span></div><div id="event-list" class="event-list"></div></div>
+          </div></details>
+          <div class="panel event-panel"><div class="panel-heading"><h3>Moments to review</h3><span>Suggestions, not confirmed incidents</span></div><div id="event-list" class="event-list"></div></div>
         </div>
 
         <div class="panel upload-panel multi-video-panel">
@@ -87,7 +91,7 @@
           <input id="batch-files" type="file" multiple accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,video/*">
           <p class="simulation-note">Select several files together, or open the picker again to add more. Remove recordings in the table below. One recording uses Start Analysis above.</p>
           <button id="clear-batch-selection" class="button" type="button" disabled>Clear selected recordings</button>
-          <div class="video-actions"><button id="analyze-batch-button" class="button button-edge" type="button" disabled>Analyze camera recordings</button><span id="batch-status" role="status" aria-live="polite">Choose recordings to begin.</span></div>
+          <div class="video-actions"><button id="analyze-batch-button" class="button button-edge" type="button" disabled>Analyze camera recordings</button><button id="cancel-batch" class="button" type="button" hidden>Cancel batch</button><span id="batch-status" role="status" aria-live="polite">Choose recordings to begin.</span></div>
           <p id="batch-error" class="video-error" role="alert" hidden></p>
           <p id="batch-summary" class="simulation-note"></p>
           <div class="batch-recovery"><label for="batch-recovery-id">Recover a recording batch by ID</label><input id="batch-recovery-id" type="text" maxlength="32" placeholder="32-character batch ID" autocomplete="off"><button id="recover-batch-button" class="button" type="button">Load batch comparison</button></div>
@@ -133,7 +137,7 @@
           </table></div></div>
         </div>
       </section>
-      <footer class="footer">EdgeVision <span>·</span> Local video processing + separate iFogSim simulation</footer>
+      <footer class="footer">EdgeVision <span>·</span> Recording review and workload comparison</footer>
     </main>
   </div>
 </body>

@@ -7,6 +7,7 @@ const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
+const { trackProcess, stopProcess, releaseProcess } = require('./job-processes');
 
 const projectRoot = path.resolve(__dirname, '..');
 const root = path.join(projectRoot, 'frontend');
@@ -26,6 +27,30 @@ let simulationRunning = false;
 let videoAnalysisRunning = false;
 let batchRunning = false;
 const videoJobs = new Map();
+const uploads = new Map();
+
+async function cancelVideoJob(job) {
+  if (!job) return false;
+  if (job.cancelRequested) return true;
+  if (!['uploaded', 'uploading', 'processing', 'simulation_pending', 'simulation_running'].includes(job.status)) return false;
+  job.cancelRequested = true;
+  job.message = 'Stopping this recording. Completed artifacts will be kept.';
+  if (uploads.has(job.jobId)) {
+    const upload = uploads.get(job.jobId);
+    upload.controller.abort();
+    await upload.done;
+  } else if (job.status === 'uploaded') {
+    await fs.promises.rm(job.uploadPath, { force: true });
+    job.status = job.analysisStatus = 'cancelled';
+    job.simulationStatus = 'cancelled';
+    job.message = 'Recording cancelled.';
+    job.completedAt = new Date().toISOString();
+  } else {
+    try { await stopProcess(job); }
+    catch (error) { job.cancelRequested = false; throw error; }
+  }
+  return true;
+}
 let videoSettings = null;
 try {
   videoSettings = JSON.parse(fs.readFileSync(videoSettingsPath, 'utf8'));
@@ -198,7 +223,13 @@ async function handleVideoUpload(request, response, batchContext = null) {
     return;
   }
 
-  const jobId = randomUUID().replaceAll('-', '');
+  const requestedId = request.headers['x-job-id'];
+  if (requestedId && !isValidJobId(requestedId)) { sendJson(response, 400, { message: 'Invalid upload identity.' }); return; }
+  const jobId = requestedId || randomUUID().replaceAll('-', '');
+  if (videoJobs.has(jobId) || fs.existsSync(path.join(videoOutputsRoot, jobId)) ||
+      fs.existsSync(path.join(videoUploadsRoot, `${jobId}${extension}`))) {
+    sendJson(response, 409, { message: 'This upload identity already exists.' }); return;
+  }
   const uploadPath = path.join(videoUploadsRoot, `${jobId}${extension}`);
   const signature = videoSignatures[extension];
   let size = 0;
@@ -215,9 +246,15 @@ async function handleVideoUpload(request, response, batchContext = null) {
     }
   });
 
+  const controller = new AbortController();
+  let uploadFinished;
+  const done = new Promise(resolve => { uploadFinished = resolve; });
+  uploads.set(jobId, { controller, done });
+  videoJobs.set(jobId, { jobId, ...(batchContext || {}), status: 'uploading', analysisStatus: 'uploading', uploadPath });
   try {
     await fs.promises.mkdir(videoUploadsRoot, { recursive: true });
-    await pipeline(request, limiter, fs.createWriteStream(uploadPath, { flags: 'wx', mode: 0o600 }));
+    await pipeline(request, limiter, fs.createWriteStream(uploadPath, { flags: 'wx', mode: 0o600 }), { signal: controller.signal });
+    if (controller.signal.aborted) throw new Error('Upload cancelled.');
     if (!size) throw Object.assign(new Error('Uploaded video is empty.'), { statusCode: 400 });
     if (header.length < signature.offset + signature.value.length ||
         !header.subarray(signature.offset, signature.offset + signature.value.length).equals(signature.value) ||
@@ -247,9 +284,16 @@ async function handleVideoUpload(request, response, batchContext = null) {
     return videoJobs.get(jobId);
   } catch (error) {
     await fs.promises.rm(uploadPath, { force: true }).catch(() => {});
+    const cancelled = controller.signal.aborted;
+    if (cancelled) {
+      videoJobs.set(jobId, { jobId, ...(batchContext || {}), status: 'cancelled', analysisStatus: 'cancelled',
+        simulationStatus: 'cancelled', message: 'Upload cancelled.', completedAt: new Date().toISOString() });
+    } else videoJobs.delete(jobId);
     const status = error.code === 'VIDEO_TOO_LARGE' ? 413 : (error.statusCode || 400);
-    sendJson(response, status, { message: status === 400 || status === 413 || status === 415
+    if (!response.destroyed) sendJson(response, status, { message: status === 400 || status === 413 || status === 415
       ? error.message : 'Video upload failed.' });
+  } finally {
+    uploads.delete(jobId); uploadFinished();
   }
 }
 
@@ -329,6 +373,9 @@ async function recoverCompletedVideoJob(jobId) {
         const resultPath = path.resolve(profileResultsDir, `${scenario}.json`);
         if (!within(path.join(resultsRoot, 'video_workloads'), resultPath)) throw new Error('Saved simulation result path is invalid.');
         const record = JSON.parse(await fs.promises.readFile(resultPath, 'utf8'));
+        if (record?.workloadProfile?.jobId === jobId && record.metrics?.processedTuples !== publicProfile.tupleCount) {
+          throw new Error(`Saved ${scenario} comparison finished ${record.metrics?.processedTuples ?? 0} of ${publicProfile.tupleCount} workload items. Retry comparison only; the video analysis is preserved.`);
+        }
         if (!validProfileSimulationRecord(record, scenario, publicProfile)) {
           throw new Error(`Saved ${scenario} simulation results do not match this video job.`);
         }
@@ -430,7 +477,8 @@ function startProfileSimulations(job, profilePath) {
     child = spawn(powershell, [
       '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
       '-File', runScript, '-Profile', profilePath, '-Scenario', 'both'
-    ], { cwd: projectRoot, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    ], { cwd: projectRoot, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] });
+    trackProcess(job, child);
   } catch (error) {
     failProfileSimulation(job, error.message);
     return;
@@ -448,6 +496,14 @@ function startProfileSimulations(job, profilePath) {
     if (finished) return;
     finished = true;
     clearTimeout(timeout);
+    await releaseProcess(job, child);
+    if (job.cancelRequested) {
+      simulationRunning = false; videoAnalysisRunning = false;
+      job.status = 'cancelled'; job.simulationStatus = 'cancelled';
+      job.message = 'Comparison cancelled. Completed video analysis is still available.';
+      job.completedAt = new Date().toISOString();
+      return;
+    }
     if (processError || exitCode !== 0) {
       failProfileSimulation(job, processError?.message || stderr || stdout ||
         `PowerShell simulation exited with code ${exitCode}.`);
@@ -459,6 +515,10 @@ function startProfileSimulations(job, profilePath) {
         const resultPath = path.join(profileResultDir, `${scenario}.json`);
         if (!within(path.join(resultsRoot, 'video_workloads'), resultPath)) throw new Error('Simulation result path is invalid.');
         const record = JSON.parse(await fs.promises.readFile(resultPath, 'utf8'));
+        if (record?.workloadProfile?.jobId === job.jobId &&
+            record.metrics?.processedTuples !== job.workloadProfile.tupleCount) {
+          throw new Error(`The ${scenario} simulation finished ${record.metrics?.processedTuples ?? 0} of ${job.workloadProfile.tupleCount} workload items before its simulation cutoff. The comparison is incomplete; your video analysis is preserved.`);
+        }
         if (!validProfileSimulationRecord(record, scenario, job.workloadProfile)) {
           throw new Error(`The ${scenario} result does not match this job's workload profile or tuple count.`);
         }
@@ -470,6 +530,12 @@ function startProfileSimulations(job, profilePath) {
         throw new Error('Cloud and edge results do not describe the same workload.');
       }
       simulationRunning = false;
+      if (job.cancelRequested) {
+        job.status = job.simulationStatus = 'cancelled';
+        job.message = 'Comparison cancelled. Completed analytics are available.';
+        job.completedAt = new Date().toISOString();
+        return;
+      }
       job.simulationResults = { cloud, edge };
       job.simulationStatus = 'completed';
       job.simulationMessage = 'Cloud-only and edge-based simulations completed successfully.';
@@ -490,19 +556,22 @@ function startProfileSimulations(job, profilePath) {
 function startVideoAnalysis(job, { analysisOnly = false, onComplete = null } = {}) {
   job.status = 'processing';
   job.analysisStatus = 'processing';
-  job.message = 'Video analysis is running.';
+  job.message = 'Loading the detection model. This can take a moment on CPU.';
   job.startedAt = new Date().toISOString();
   videoAnalysisRunning = true;
   let child;
   try {
-    const pythonArgs = ['-m', 'app.run_video', job.uploadPath, '--job-id', job.jobId,
+    const pythonArgs = ['-m', 'app.run_video', job.uploadPath, '--use-staged-upload', '--job-id', job.jobId,
       '--display-filename', job.displayFilename];
     if (job.syntheticTestInput) pythonArgs.push('--synthetic-test-input');
+    if (job.frameInterval) pythonArgs.push('--frame-interval', String(job.frameInterval));
     child = spawn(videoPython, pythonArgs, {
       cwd: videoRoot,
       windowsHide: true,
+      detached: process.platform !== 'win32',
       stdio: ['ignore', 'pipe', 'pipe']
     });
+    trackProcess(job, child);
   } catch (error) {
     videoAnalysisRunning = false;
     job.analysisStatus = 'failed';
@@ -515,7 +584,25 @@ function startVideoAnalysis(job, { analysisOnly = false, onComplete = null } = {
   }
   let stdout = '';
   let stderr = '';
-  child.stdout.on('data', chunk => { stdout = (stdout + chunk.toString('utf8')).slice(-128 * 1024); });
+  let progressBuffer = '';
+  child.stdout.on('data', chunk => {
+    const text = chunk.toString('utf8'); stdout = (stdout + text).slice(-128 * 1024);
+    progressBuffer += text;
+    const lines = progressBuffer.split(/\r?\n/); progressBuffer = lines.pop().slice(-4096);
+    for (const line of lines) {
+      if (job.cancelRequested) continue;
+      if (line === 'Stage: processing') job.message = 'Detecting people and vehicles, following tracks and finding review moments.';
+      if (line.startsWith('Progress: ')) {
+        try {
+          const progress = JSON.parse(line.slice(10));
+          if (Number.isSafeInteger(progress.decodedFrames) && progress.decodedFrames >= 0) {
+            job.frameProgress = progress;
+            job.message = `Processing frame ${progress.decodedFrames}${progress.sourceFrames > 0 ? ` of about ${progress.sourceFrames}` : ''}. ${progress.processedFrames} samples analyzed.`;
+          }
+        } catch { /* Ignore malformed progress; the completed report is validated separately. */ }
+      }
+    }
+  });
   child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString('utf8')).slice(-128 * 1024); });
   let finished = false;
   const timeout = setTimeout(() => child.kill(), 30 * 60 * 1000);
@@ -526,7 +613,15 @@ function startVideoAnalysis(job, { analysisOnly = false, onComplete = null } = {
     finished = true;
     clearTimeout(timeout);
     try {
+      await releaseProcess(job, child);
       await fs.promises.rm(job.uploadPath, { force: true }).catch(() => {});
+      if (job.cancelRequested) {
+        videoAnalysisRunning = false;
+        job.status = job.analysisStatus = 'cancelled'; job.simulationStatus = 'cancelled';
+        job.message = 'Analysis cancelled. You can select another recording.';
+        job.completedAt = new Date().toISOString();
+        return;
+      }
       if (processError || exitCode !== 0) {
         videoAnalysisRunning = false;
         job.completedAt = new Date().toISOString();
@@ -616,7 +711,10 @@ function startVideoAnalysis(job, { analysisOnly = false, onComplete = null } = {
       job.simulationStatus = 'pending';
       job.simulationMessage = 'Workload profile validated; cloud and edge simulations are pending.';
       job.message = 'Video analysis completed. Cloud and edge simulations are starting.';
-      startProfileSimulations(job, workloadProfilePath);
+      if (job.cancelRequested) {
+        videoAnalysisRunning = false; job.status = 'cancelled'; job.simulationStatus = 'cancelled';
+        job.message = 'Comparison cancelled. Completed analytics are available.';
+      } else startProfileSimulations(job, workloadProfilePath);
     } finally {
       if (analysisOnly) onComplete?.(job);
     }
@@ -665,6 +763,59 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     await handleVideoUpload(request, response);
     return;
   }
+  const cancelMatch = pathname.match(/^\/api\/video\/cancel\/([a-f0-9]{32})$/);
+  if (request.method === 'POST' && cancelMatch) {
+    const job = videoJobs.get(cancelMatch[1]);
+    if (!job) { sendJson(response, 404, { message: 'No active recording was found.' }); return; }
+    if (job.batchId) { sendJson(response, 409, { message: 'Cancel this recording through its parent batch.' }); return; }
+    try {
+      if (!await cancelVideoJob(job)) { sendJson(response, 409, { message: 'This recording has already finished.' }); return; }
+      sendJson(response, 202, { jobId: job.jobId, status: job.status, message: job.message });
+    } catch { sendJson(response, 500, { message: 'The process could not be stopped. Keep this page open and try again.' }); }
+    return;
+  }
+  const retryMatch = pathname.match(/^\/api\/video\/simulation\/([a-f0-9]{32})\/retry$/);
+  if (request.method === 'POST' && retryMatch) {
+    const job = await getVideoJob(retryMatch[1]);
+    if (!job) { sendJson(response, 404, { message: 'Saved video job not found.' }); return; }
+    if (job.batchId || job.analysisStatus !== 'completed' || !['failed', 'cancelled'].includes(job.simulationStatus)) {
+      sendJson(response, 409, { message: 'Retry is available for an individual completed analysis with a failed or cancelled comparison.' }); return;
+    }
+    if (simulationRunning || videoAnalysisRunning || batchRunning) { sendJson(response, 409, { message: 'Another compute job is running.' }); return; }
+    const profilePath = path.join(videoOutputsRoot, 'workloads', `${job.jobId}.json`);
+    let raw;
+    try {
+      raw = JSON.parse(await fs.promises.readFile(profilePath, 'utf8'));
+      if (!validWorkloadProfile(raw, job.jobId)) throw new Error('Invalid profile');
+    } catch { sendJson(response, 409, { message: 'The saved workload profile is missing or invalid. Analytics are preserved; comparison cannot be retried from this job.' }); return; }
+    // Profile reading yields; recheck before acquiring the shared compute slot.
+    if (simulationRunning || videoAnalysisRunning || batchRunning) { sendJson(response, 409, { message: 'Another compute job is running.' }); return; }
+    simulationRunning = true;
+    job.cancelRequested = false;
+    job.status = 'simulation_pending'; job.simulationStatus = 'pending';
+    try {
+      const directory = path.join(resultsRoot, 'video_workloads', job.jobId);
+      const history = path.join(directory, 'history', randomUUID().replaceAll('-', ''));
+      for (const scenario of ['cloud', 'edge']) {
+        const file = path.join(directory, `${scenario}.json`);
+        if (fs.existsSync(file)) {
+          await fs.promises.mkdir(history, { recursive: true });
+          await fs.promises.copyFile(file, path.join(history, `${scenario}.json`), fs.constants.COPYFILE_EXCL);
+        }
+      }
+      job.workloadProfile = publicWorkloadProfile(raw);
+      job.simulationResults = { cloud: null, edge: null }; job.simulationError = null;
+      if (job.cancelRequested) {
+        simulationRunning = false; job.status = job.simulationStatus = 'cancelled';
+        job.message = 'Comparison retry cancelled. Analytics are preserved.';
+      } else startProfileSimulations(job, profilePath);
+      sendJson(response, 202, { jobId: job.jobId, status: job.status, message: job.message });
+    } catch (error) {
+      failProfileSimulation(job, `Could not preserve the previous comparison before retry: ${error.message}`);
+      sendJson(response, 503, { message: job.simulationError });
+    }
+    return;
+  }
   if (request.method === 'POST' && pathname === '/api/video/analyze') {
     if (!videoSettings || !fs.existsSync(videoPython)) {
       sendJson(response, 503, { message: 'Video analytics Python environment is unavailable.' });
@@ -673,10 +824,12 @@ async function handleVideoApi(request, response, pathname, searchParams) {
     let body;
     try { body = await readJsonBody(request); } catch (error) { sendJson(response, error.statusCode || 400, { message: error.message }); return; }
     if (!isValidJobId(body.jobId)) { sendJson(response, 400, { message: 'A valid uploaded job ID is required.' }); return; }
+    if (body.frameInterval !== undefined && ![1, 3].includes(body.frameInterval)) { sendJson(response, 400, { message: 'Choose detailed or faster analysis.' }); return; }
     const job = videoJobs.get(body.jobId);
     if (!job) { sendJson(response, 404, { message: 'Video job not found.' }); return; }
     if (job.status !== 'uploaded') { sendJson(response, 409, { message: 'This video job has already been started.' }); return; }
     if (simulationRunning || videoAnalysisRunning || batchRunning) { sendJson(response, 409, { message: 'Another compute job is running. Try again after it finishes.' }); return; }
+    job.frameInterval = body.frameInterval || 1;
     if (!startVideoAnalysis(job)) {
       sendJson(response, 503, { message: job.error || 'Python processor could not be started.' });
       return;
@@ -702,7 +855,7 @@ async function handleVideoApi(request, response, pathname, searchParams) {
         analysisCompletedAt: job.analysisCompletedAt || null,
         simulationStartedAt: job.simulationStartedAt || null,
         simulationCompletedAt: job.simulationCompletedAt || null,
-        completedAt: job.completedAt || null, progress: null
+        completedAt: job.completedAt || null, progress: null, frameProgress: job.frameProgress || null
       });
       return;
     }
@@ -875,17 +1028,28 @@ const multiVideoApi = require('./multi-video').createMultiVideoApi({
   outputsRoot: videoOutputsRoot, resultsRoot, settings: videoSettings,
   readJsonBody, sendJson, uploadVideo: handleVideoUpload, getVideoJob,
   validWorkloadProfile, validRecord, safeError: safeVideoError,
+  cancelBatch: async batch => {
+    for (const job of videoJobs.values()) if (job.batchId === batch.batchId) await cancelVideoJob(job);
+    await stopProcess(batch);
+  },
   isBusy: () => simulationRunning || videoAnalysisRunning || batchRunning ||
     [...videoJobs.values()].some(job => job.status === 'uploaded' && !job.batchId),
   setBusy: value => { batchRunning = value; },
   analyzeVideo: job => new Promise(resolve => {
     if (!startVideoAnalysis(job, { analysisOnly: true, onComplete: resolve })) resolve(job);
   }),
-  runSimulation: async profilePath => {
+  runSimulation: async (profilePath, batch) => {
     const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
-    await execFileAsync(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+    await new Promise((resolve, reject) => {
+      const child = execFile(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
       '-File', runScript, '-Profile', profilePath, '-Scenario', 'both'],
-    { cwd: projectRoot, windowsHide: true, timeout: 30 * 60 * 1000, maxBuffer: 4 * 1024 * 1024 });
+      { cwd: projectRoot, windowsHide: true, detached: process.platform !== 'win32', timeout: 30 * 60 * 1000, maxBuffer: 4 * 1024 * 1024 },
+      async error => {
+        await releaseProcess(batch, child);
+        if (error) reject(error); else resolve();
+      });
+      trackProcess(batch, child);
+    });
   }
 });
 

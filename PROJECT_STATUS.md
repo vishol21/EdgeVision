@@ -362,3 +362,41 @@ For all unstarted stages: no tasks implemented, no files changed, no tests execu
 - Both root and frontend npm launchers served dashboard assets and essential API routes. Each recovered the existing two-camera batch and served its reports and annotated-video byte ranges without new analysis or simulation in the original project.
 - JavaScript syntax (10 files), PowerShell syntax (3 scripts), local Markdown links and JSON parsing (206 project files) passed. All 22,376 protected files matched the cleanup snapshot; the root README is the only EdgeVision-owned README, and all six dependency README/notice files remain intact.
 - Git preparation is limited to the approved backend/guide moves, import/launcher changes and documentation updates. The seven removed duplicate results and regenerated-cache cleanup were ignored files, so they do not produce tracked deletions. The three earlier commits and pinned iFogSim revision remain unchanged. No GitHub push is authorized by this verification.
+
+## 2026-11-23 - Recording review and cancellation improvements
+
+- User approved implementation of simpler dashboard headings, people/vehicle track summaries, readable report downloads, optional faster sampling, timestamped review suggestions and real recording/batch cancellation. No GitHub changes are authorized until review.
+- Removed the final-year and local-processing headings; retained the existing dashboard palette and simulation workflow. Object details are collapsed by default, sorted people-first and paged/filterable. Downloadable summaries explain counts and limitations; JSON and saved-video endpoints remain available.
+- Added cancellation for partial uploads, active Python processing and individual/batch workload simulations. Only registered request-owned process trees are stopped. Completed analytics are retained, batch processing does not start later cameras after cancellation, and lock release is verified before controls return.
+- Detailed processing remains default; optional every-third-frame sampling is recorded in new reports/profiles. Added model-loading and frame-count progress and avoided copying an already private staged upload a second time.
+- Added bounded person-presence and sustained rapid-image-motion review suggestions. They are heuristic timestamps, not robbery/accident classification. Region rules still require scene configuration. Existing historical outputs are not regenerated or relabeled.
+- Corrected lifetime first-seen and path-distance accounting independently of the bounded movement-history window.
+- Verification completed in a disposable external project copy: 29 focused Node tests, 28 Python analytics tests, 14 experiment tests, isolated Java build, real partial-upload/Python/batch/simulation cancellation, single-video API, camera-workload API matrix, multi-recording integration and controlled Java profiles passed. Desktop/mobile browser checks verified real Cancel behavior, recovery, summary downloads, collapsed details and no horizontal overflow or page JavaScript errors. The initial multi-recording run lost one polling connection; the full suite passed on a fresh-server rerun with unchanged assertions, and the connection failure did not reproduce. The first Java test invocation omitted copied PowerShell scripts; correcting the external test setup resolved it. Failed logs were retained; no failing assertions were bypassed.
+- No commit, push, submodule modification or historical-artifact cleanup performed.
+
+- Final integrity: SHA-256 checks verified all 2,372 protected model, saved-output, upload, result, evidence and simulator-dependency files with no changes or new artifacts in those locations. Git HEAD and index remained unchanged; the pinned iFogSim submodule remained clean.
+- Installed Python dependency integrity: 19,792 environment/package files matched their pre-cleanup SHA-256 hashes; installed packages and notices were not modified.
+
+## 2026-11-23 - Dense-recording comparison completion fix
+
+- Investigated failed job bf6b80303d4844a2b9ecd38f49f5e8b3: its saved profile has 2,298 items, but the old 2,000-unit horizon stopped cloud after 948 results and edge after 203. Both generated files existed, but strict completion validation correctly rejected the pair. Analytics and workload generation had succeeded.
+- Replaced the single-video fixed drain allowance with an input-derived CPU/network queue-drain allowance. Both placements use the same horizon; the 2,000-unit minimum remains for small profiles, and unsupported horizons are rejected. Did not weaken result validation or change device placement/specifications.
+- Simulator runner now detects newer project Java sources instead of indefinitely reusing stale classes. Added actionable incomplete-count errors and comparison-only retry with byte-preserving history of prior result files. Explicit saved-job links restore a completed individual report without re-uploading or inference.
+- External-copy verification: the real 2,298-item profile completed 2,298 results in both scenarios at a matching 22,409-unit horizon; the real 391-item profile completed 391 in both at 4,232 units. Four permanent queue-drain regressions passed, including unchanged 20-item/2,000-unit behavior and rejection of unsupported CPU demand. Stale-source rebuilding and the existing six-count camera validation passed.
+- Actual browser recovery/retry of a copied failed job completed cloud/edge comparison with 2,298 items each and zero page errors. Previous failed comparison files were archived byte-for-byte in the copy and its report hash remained unchanged. No Python environment/inference was needed for that comparison-only browser test.
+- Original saved analyses, workloads and comparison files have not been rerun or replaced. Only a user-triggered retry will update that job's current result pair after preserving its prior pair. No commit, push or submodule change.
+
+
+### Review-cue correction — 23 November 2026
+
+- Removed ordinary person sightings from new review events and from the displayed legacy incident list; original saved JSON artifacts remain untouched.
+- Added possible fall/posture-change and possible vehicle-collision cues based on temporal bounding-box/trajectory evidence, alongside sustained rapid movement. These are unvalidated heuristics, not trained robbery, fighting or accident classifiers.
+- Counts in the dashboard reflect the displayed review list. New cues require a new analysis; saved reports are not regenerated.
+- Validation: 11 review/tracker/config tests, 17 existing rule/config/workload tests and 30 focused Node tests passed. JavaScript syntax and Git whitespace checks passed. No real incident-detection accuracy claim: checks use synthetic trajectories, not a labeled robbery/crash evaluation dataset.
+
+### Final local verification — 23 November 2026
+
+- All 34 Python tests passed in an external test copy, including real model inference on the small synthetic fixture. All 34 focused Node/Java tests passed, including recovery, cancellation process ownership, dashboard state and 20/391/2,298-item simulation completion. The initial Node invocation lacked the copied Stage 7 evidence fixture; copying that existing fixture into the external test environment resolved the setup failure without changing assertions.
+- Clarified the README limitation: possible-fall posture cues are implemented, but a trained/validated fall detector is not. Robbery/action classification, physical live cameras and browser encoding changes remain deferred.
+- Historical integrity check matched 2,370 of 2,372 protected files against the earlier snapshot. Ignored standalone results `results/cloud.json` and `results/edge.json` differ from that earlier baseline; neither was rewritten by this verification. All eight separately tracked artifacts for the two previously investigated saved jobs matched their baseline hashes. No blanket unchanged-artifact claim is made for the two standalone results.
+- Git whitespace checks passed. Branch remains main; HEAD/index are unchanged, with 21 modified/untracked paths pending review. The pinned iFogSim checkout remains clean. No staging, commit or push performed.

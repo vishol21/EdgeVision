@@ -455,6 +455,42 @@ The repository separates the browser dashboard (`frontend/`) from the Node API (
 - `results/cloud.json` and `results/edge.json` retain standalone comparison history.
 - Setup, demonstration and viva guides now live under `research/guides/`. Historical stage records may mention their previous `docs/` paths.
 
+## Recording review and cancellation
+
+The dashboard now leads with people tracks, vehicle tracks, review moments and processing time. Repeated frame observations are available under **How these results work**; **Object details** contains a people-first track table with filtering and ten rows per page. Track IDs are recording-scoped, and neither tracks nor observations are verified unique people across cameras.
+
+**Detailed** analysis remains the default. **Faster** mode analyzes every third frame and records the actual sampling interval in the report and workload. It can miss brief activity and weaken tracking; no fixed speedup or real-time capacity is promised. Uploads already staged by the server are processed without an additional input-file copy. Progress messages distinguish model loading, frame processing and the separate simulations.
+
+**Cancel analysis** and **Cancel batch** stop the request's own upload or process tree. Controls become available again after finalization releases the compute lock. Cancelling the comparison keeps completed analytics. Cancelled jobs are not resumed, and incomplete output files may remain. Existing saved jobs and comparisons are not rewritten.
+
+Automatic review suggestions work without scene regions. Ordinary person sightings are not incidents. New analyses flag sustained rapid movement, an upright person becoming persistently wider than tall (possible fall/posture change), and two approaching vehicle tracks with persistent box overlap and an abrupt stop/reversal (possible collision). Findings include timestamps and explanatory evidence. Defaults under `review_moments` are 0.2 image diagonals/second, 0.4-second confirmation, 8-second cooldown and at most 100 suggestions. These are unvalidated image-space heuristics: perspective overlap, camera movement, bending, occlusion and tracking errors can cause false positives. They can miss real incidents, including single-vehicle crashes, fighting and robbery. A trained action model and labeled CCTV evaluation are still needed for reliable activity classification.
+
+**Robbery and accident classification are not implemented.** Region-dependent activity rules still require appropriate regions. Older saved reports retain their original events and do not gain new review markers automatically. Reports state whether review suggestions ran, and timeline buttons seek the saved annotated video when its codec is supported. Open/Download links remain available otherwise.
+
+**Download summary report** creates a readable text report in the browser; **Full data (JSON)** retains the existing saved-report download. No additional report is written to the server by the summary download.
+
+Focused regressions:
+
+```powershell
+node --test tests/node/test-state.js tests/node/test-job-processes.js tests/node/test-multi-video-unit.js tests/node/test-batch-recovery.js
+```
+
+The cancellation API integration script, `tests/node/test-cancellation-api.js`, must run against a server in the same disposable OS-temp copy, with `EDGEVISION_ISOLATED_TESTS=1`. It deliberately delays the copy's simulation script to test cancellation and restores that script afterward. Do not run mutation-producing integration tests against original recovery data.
+
+## Incomplete recording comparisons
+
+The finite single-video simulation horizon includes workload-dependent CPU/network queue-drain allowance, using the same horizon for cloud and edge. Small profiles retain the 2,000-unit minimum. This addresses dense recordings that emit all tuples before the old cutoff but have many results still queued. Completion validation remains strict; an incomplete pair is never displayed as successful. Different horizons affect modeled idle energy, so new large-workload outputs must not be substituted into historical evaluation evidence.
+
+If analytics succeeded but the comparison failed or was cancelled, **Retry comparison only** reuses the existing workload without uploading or running YOLO again. Previous comparison JSON files are copied byte-for-byte under `results/video_workloads/<job-id>/history/<run-id>/` before retry. Reports, annotated videos and workload profiles are retained. Missing or invalid profiles cannot be retried automatically.
+
+An explicit `/?job=<32-character-job-id>` link loads a completed individual recording and its saved comparison. Opening a normal dashboard URL still starts neutral. Batch cameras continue to use their parent batch comparison. The simulator runner rebuilds when project Java source is newer than the compiled entry point.
+
+Queue-drain regressions, after building the simulator in an isolated copy:
+
+```powershell
+node --test tests/node/test-profile-completion.js
+```
+
 ## Limitations
 
 - No physical IP camera/NVR is confirmed; live RTSP ingestion and camera registration remain proposals.
@@ -462,7 +498,7 @@ The repository separates the browser dashboard (`frontend/`) from the Node API (
 - Actual frames stay in the local analytics workflow. The simulator does not establish physical-network privacy, encryption or compliance guarantees.
 - No labeled real-CCTV ground truth, measured detection accuracy, hardware-calibrated latency or defensible MI calibration is available. Some legacy output lacks original input provenance and complete workload artifacts; preserve it as history.
 - Frame sampling can miss brief activity; tracker IDs can change after occlusion. Movement histories are bounded. Geometry, direction and stopping thresholds need scene-specific tuning; perspective compensation and lighting/weather validation are absent.
-- An empty event list does not establish safety, especially when no regions are configured. There is no implemented fall detector or cross-camera re-identification.
+- An empty event list does not establish safety, especially when no regions are configured. The possible-fall cue uses bounding-box posture changes; it is not a trained or validated fall detector. Cross-camera re-identification is not implemented.
 - Annotated MP4 codec support varies by browser; saved Open/Download fallback is retained. Encoding changes are deferred.
 - Processing is sequential and compute-locked; no real-time multi-camera throughput guarantee, automatic unfinished-batch resume, storage quota or long/max-size stress validation is claimed.
 - Dependency README files and required notices remain with the pinned simulator and installed packages. They are outside the single EdgeVision-guide rule.
