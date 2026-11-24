@@ -58,8 +58,6 @@
     batchButton.disabled = state.running || Boolean(batchSelectionError());
     document.querySelector('#clear-batch-selection').disabled = state.running || !state.batchFiles.length;
     batchFileInput.disabled = state.running;
-    document.querySelector('#recover-batch-button').disabled = state.running;
-    document.querySelector('#batch-recovery-id').disabled = state.running;
     comparisonModeButton.hidden = !state.video.comparison;
     comparisonModeButton.disabled = state.running;
     comparisonModeButton.textContent = profileSelected ? 'Use virtual-camera simulation' : 'Show video comparison';
@@ -458,9 +456,11 @@
       const row = document.createElement('tr');
       addCell(row, `${camera.filename} · ${camera.cameraId}`);
       const label = { selected: 'Selected', awaiting_upload: 'Waiting for upload', uploading: 'Uploading', uploaded: 'Uploaded',
-        processing: 'Analyzing', completed: 'Analyzed', upload_failed: 'Upload rejected', analysis_failed: 'Analysis failed', interrupted: 'Interrupted' }[camera.status] || 'Unavailable';
+        processing: 'Analyzing', cancelled: 'Cancelled', completed: 'Analyzed', upload_failed: 'Upload rejected', analysis_failed: 'Analysis failed', interrupted: 'Interrupted' }[camera.status] || 'Unavailable';
       const cameraError = state.batchReportErrors[camera.jobId] || camera.error;
-      addCell(row, cameraError ? `${label}: ${readableVideoError(cameraError)}` : label);
+      const progress = camera.frameProgress;
+      const progressText = camera.status === 'processing' && progress ? ` — frame ${format(progress.decodedFrames, 0)}${progress.sourceFrames > 0 ? ` of ${format(progress.sourceFrames, 0)}` : ''}; ${format(progress.processedFrames, 0)} samples analyzed` : '';
+      addCell(row, cameraError ? `${label}: ${readableVideoError(cameraError)}` : `${label}${progressText}${camera.status === 'processing' && !progress && camera.message ? ` — ${camera.message}` : ''}`);
       const action = document.createElement('td');
       if (camera.status === 'completed') {
         const button = document.createElement('button');
@@ -489,8 +489,7 @@
     }
     if (!cameras.length) table.innerHTML = '<tr><td colspan="3">No camera recordings selected.</td></tr>';
     if (batch) {
-      document.querySelector('#batch-recovery-id').value = batch.batchId;
-      batchStatus.textContent = batch.message;
+      batchStatus.textContent = batch.status === 'cancelled' ? 'Batch cancelled. Completed camera reports are kept. Select recordings and start a new analysis for a combined comparison.' : batch.message;
       const summary = batch.summary;
       const included = batch.cameras.filter(camera => camera.status === 'completed').length;
       const people = summary?.objectCountsByClass?.person || {};
@@ -919,31 +918,6 @@
     }
   });
   batchButton.addEventListener('click', analyzeBatch);
-  document.querySelector('#recover-batch-button').addEventListener('click', async () => {
-    if (state.running) return;
-    const id = document.querySelector('#batch-recovery-id').value.trim().toLowerCase();
-    batchError.hidden = true;
-    try {
-      if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('Enter the complete 32-character batch ID.');
-      setRunning(true, 'Recovering the selected recording batch.');
-      clearDisplayedReport(); state.batchReports = {}; state.batchReportErrors = {};
-      state.video.file = null; videoFileInput.value = ''; videoSelection.hidden = true;
-      videoPreview.pause?.(); videoPreview.removeAttribute?.('src');
-      if (state.video.previewUrl) URL.revokeObjectURL(state.video.previewUrl);
-      state.video.previewUrl = null;
-      selectProfileComparison(id); state.batch = null; renderBatch();
-      const batch = await fetchVideoJson(`/api/video/batches/${id}`);
-      if (batch.status === 'draft') throw new Error('This batch has not started. Finish its selected uploads or start a new batch.');
-      selectProfileComparison(id);
-      await pollBatch(id);
-    } catch (error) {
-      batchError.textContent = error.message; batchError.hidden = false;
-      statusText.textContent = 'Failed'; statusDetail.textContent = 'The selected batch could not be recovered.';
-      batchStatus.textContent = `Recovery failed: ${error.message}`;
-    } finally { setRunning(false); }
-  });
-
-
   async function checkApiHealth() {
     const version = state.comparisonVersion;
     try {

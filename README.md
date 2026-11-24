@@ -275,7 +275,7 @@ An explicit payload is a configured assumption, not measured video bytes. Input 
 
 ### Recovery and API routes
 
-Use the **Batch ID** shown for a recording batch, not an individual recording's **Job ID**. Batch recovery restores camera rows, reports, workloads and the paired comparison. Saved-video playback and Open/Download links use saved artifacts; original uploads are not required. Existing annotated MP4s may need an external compatible player.
+The manual batch-ID reload control has been removed from the dashboard. Fresh batches still show camera rows, reports, workloads and the paired comparison automatically after processing. Saved batch APIs are retained for artifact access; existing data is preserved. Saved-video playback and Open/Download links use saved artifacts; original uploads are not required. Existing annotated MP4s may need an external compatible player.
 
 Completed single-video jobs also recover through their job-specific APIs after restart. There is no separate single-job recovery field in the UI. Incomplete jobs are not automatically resumed. Recovery checks missing or invalid artifacts instead of replacing them with unrelated results; preserve incomplete legacy records for investigation.
 

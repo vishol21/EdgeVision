@@ -148,8 +148,6 @@ td { padding: 9px 6px; border-top: 1px solid #26364a; color: var(--muted); font-
 .multi-video-panel table { min-width: 560px; }
 .multi-video-panel td:nth-child(3) { min-width: 125px; }
 .multi-video-panel td:nth-child(3) .button { white-space: nowrap; }
-.batch-recovery { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-.batch-recovery input { min-width: 0; width: 270px; max-width: 100%; padding: 8px; background: var(--background); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font: inherit; }
 .nav-link { white-space: nowrap; }
 
 @media (min-width: 1400px) { .main-content { padding-right: 40px; padding-left: 40px; } }
@@ -187,7 +185,6 @@ input { caret-color: var(--accent); }
 input::placeholder { color: var(--muted); opacity: 1; }
 input[type="range"] { min-height: 44px; }
 input[type="file"]::file-selector-button { min-height: 44px; padding: 0 12px; margin-right: 10px; border: 1px solid #526985; border-radius: 4px; background: #1a2940; color: var(--text); font: inherit; cursor: pointer; }
-.batch-recovery input { min-height: 44px; }
 .result-card > span { line-height: 1.5; letter-spacing: 0; }
 .table-scroll { scrollbar-color: #526985 var(--background); }
 th, td, .result-card strong { font-variant-numeric: tabular-nums; }

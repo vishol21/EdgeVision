@@ -63,6 +63,7 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
   get('#camera-count').value = '5';
   const calls = [];
   const blobs = [];
+  let submittedBatch = null;
   const charts = [];
   class Chart {
     constructor(canvas, config) { this.data = config.data; this.options = config.options; charts.push(this); }
@@ -74,6 +75,11 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
     window: { Chart: chartsAvailable ? Chart : undefined, matchMedia: () => ({ matches: reducedMotion }) }, Chart,
     fetch: async (url, options) => {
       calls.push(url);
+      if (submittedBatch && options?.method === 'POST') {
+        if (url === '/api/video/batches') return response(submittedBatch);
+        if (url.includes('/cameras/')) return response({ status: 'uploaded' });
+        if (url.endsWith('/run')) return response({ status: 'processing' });
+      }
       if (url === '/api/video/batches/config') return response({ maxCameras: 10, maxFileBytes: 524288000, maxTotalBytes: 1073741824, maxCombinedTuples: 100000 });
       return handler(url, options);
     },
@@ -83,6 +89,15 @@ function harness(handler = async () => response({ status: 'ok' }), { chartsAvail
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../frontend/js/app.js'), 'utf8'), context);
   return { get, buttons, calls, charts, blobs,
+    showBatch: async id => {
+      // Exercise the supported picker -> upload -> run -> poll flow.
+      const example = recoveredBatch();
+      submittedBatch = { ...example, batchId: id, status: 'draft', cameras: example.cameras.map(c => ({ ...c, status: 'awaiting_upload' })) };
+      get('#batch-files').files = submittedBatch.cameras.map(c => ({ name: c.filename, size: 100 }));
+      get('#batch-files').emit('change');
+      await get('#analyze-batch-button').emit('click');
+      submittedBatch = null;
+    },
     run: action => get(`[data-run="${action}"]`).emit('click'),
     empty() {
       assert.equal(get('[data-metric="latency"]').children[0].textContent, '—');
@@ -124,8 +139,7 @@ test('track details are ordered, paged and filtered; readable report retains lim
     return response({ jobId: camera.jobId, sourceName: 'example.avi', processing: {}, events: [], trackingSummaries: tracks,
       objectCountsByClass: { person: { uniqueTrackingIds: 4 }, car: { uniqueTrackingIds: 20 } } });
   });
-  ui.get('#batch-recovery-id').value = batch.batchId;
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.equal(ui.get('#tracking-table').children.length, 10);
   assert.equal(ui.get('#tracking-table').children[0].children[1].textContent, 'person');
   ui.get('#tracks-next').emit('click'); assert.match(ui.get('#track-page-info').textContent, /Page 2 of 3/);
@@ -147,7 +161,7 @@ test('review timestamps seek playback and an unsupported codec has a useful fall
       ruleCoverage: { reviewSuggestionsEnabled: true, reviewSuggestionCount: 1, reviewSuggestionLimit: 1 },
       events: [{ event_type: 'rapid_movement_review', timestamp_seconds: 2, object_class: 'person', details: { reason: 'Review image motion.' } }] });
   });
-  ui.get('#batch-recovery-id').value = batch.batchId; await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.match(ui.get('#video-rule-note').textContent, /limit was reached/);
   const player = ui.get('#saved-video'); player.play = () => Promise.reject(new Error('Unsupported codec'));
   const details = ui.get('#event-list').children[0].children[0];
@@ -170,8 +184,7 @@ test('legacy person sightings are excluded while specific incident cues and coun
         { event_type: 'possible_vehicle_collision_review', timestamp_seconds: 3, object_class: 'car' }
       ] });
   });
-  ui.get('#batch-recovery-id').value = batch.batchId;
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.equal(ui.get('#event-total').textContent, '2');
   assert.equal(ui.get('#event-list').children.length, 2);
   assert.match(ui.get('#event-list').children[0].children[0].children[0].textContent, /Possible person fall/);
@@ -227,7 +240,7 @@ function recoveredBatch() {
   return { batchId:id, status:'completed', message:'Recovered completed batch.', cameras, simulation, summary:{eventCount:0} };
 }
 
-test('completed recovery loads all reports and saved playback, clears stale content and supports camera switching', async () => {
+test('completed batch loads all reports and saved playback, clears stale content and supports camera switching', async () => {
   const batch = recoveredBatch();
   const ui = harness(async url => {
     if (url.endsWith('/health')) return response({status:'ok'});
@@ -237,8 +250,7 @@ test('completed recovery loads all reports and saved playback, clears stale cont
     return response({});
   });
   ui.get('#video-report-context').textContent='Unrelated old report';
-  ui.get('#batch-recovery-id').value=batch.batchId.toUpperCase();
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.equal(ui.get('#run-status').textContent,'Complete');
   assert.equal(ui.calls.filter(x=>x.includes('/video/results/')).length,2);
   assert.match(ui.get('#video-report-context').textContent,new RegExp(batch.cameras[0].jobId));
@@ -253,8 +265,7 @@ test('missing saved artifacts are visible and do not restore an unrelated report
   const batch=recoveredBatch();
   const ui=harness(async url=>url.endsWith('/health')?response({status:'ok'}):url.includes('/batches/')?response(batch):response({message:'Saved artifact missing'},false));
   ui.get('#video-report-context').textContent='Unrelated old report';
-  ui.get('#batch-recovery-id').value=batch.batchId;
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.equal(ui.get('#video-results').hidden,true);
   assert.equal(ui.get('#video-report-context').textContent,'');
   assert.equal(ui.get('#batch-error').hidden,false);
@@ -262,15 +273,14 @@ test('missing saved artifacts are visible and do not restore an unrelated report
   assert.match(ui.get('#batch-status').textContent,/missing or invalid/);
 });
 
-test('late camera requests and background recovery do not replace the most recently chosen report', async () => {
+test('late camera requests and background report loading do not replace the most recently chosen report', async () => {
   const batch=recoveredBatch(), pending=new Map();
   const ui=harness(async url=>{
     if(url.endsWith('/health')) return response({status:'ok'});
     if(url.includes('/batches/')) return response(batch);
     const wait=deferred(); const list=pending.get(url)||[];list.push(wait);pending.set(url,list);return wait.promise;
   });
-  ui.get('#batch-recovery-id').value=batch.batchId;
-  const recovery=ui.get('#recover-batch-button').emit('click'); await flush();
+  const recovery=ui.showBatch(batch.batchId); await flush();
   const first=ui.get('#batch-camera-table').children[0].children[2].children[0].emit('click');
   const second=ui.get('#batch-camera-table').children[1].children[2].children[0].emit('click');
   const reply=(camera,index)=>pending.get(camera.reportUrl)[index].resolve(response({jobId:camera.jobId,processing:{},events:[]}));
@@ -289,23 +299,46 @@ test('unavailable saved video is reported while another camera report still rest
     if(url.includes('/results/'))return response({jobId:camera.jobId,video:{outputUrl:`/api/video/output/${camera.jobId}`},processing:{},events:[]});
     return response({},camera.jobId!==batch.cameras[0].jobId);
   });
-  ui.get('#batch-recovery-id').value=batch.batchId;
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batch.batchId);
   assert.equal(ui.get('#run-status').textContent,'Recovery incomplete');
   assert.match(ui.get('#batch-error').textContent,/annotated video is missing/);
   assert.match(ui.get('#video-report-context').textContent,new RegExp(batch.cameras[1].jobId));
   assert.equal(ui.get('#results-table-body').children.length,2);
 });
 
-test('invalid IDs, single Job IDs and incomplete batch errors are visible', async () => {
-  for (const [id,payload] of [['bad',null],['a'.repeat(32),{message:'This is a single-video Job ID, not a Batch ID.'}],['b'.repeat(32),{status:'draft'}]]) {
-    const ui=harness(async url=>url.endsWith('/health')?response({status:'ok'}):response(payload,payload?.status==='draft'));
-    ui.get('#batch-recovery-id').value=id;
-    await ui.get('#recover-batch-button').emit('click');
-    assert.equal(ui.get('#batch-error').hidden,false);
-    assert.equal(ui.get('#run-status').textContent,'Failed');
-    assert.match(ui.get('#batch-error').textContent,/32-character|Job ID|has not started/);
-  }
+test('manual batch reload controls are removed from the dashboard', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../../frontend/index.html'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../frontend/js/app.js'), 'utf8');
+  assert.doesNotMatch(html + source, /batch-recovery-id|recover-batch-button/);
+});
+
+test('active batch displays the current camera frame progress', async () => {
+  const batch = recoveredBatch();
+  let polls = 0;
+  const ui = harness(async url => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.includes('/batches/')) {
+      if (polls++ === 2) return response({ ...batch, status: 'processing', message: 'Recording 1/2: Processing frame 25 of about 100.',
+        cameras: batch.cameras.map((c, i) => ({ ...c, status: i ? 'uploaded' : 'processing', frameProgress: i ? null : { decodedFrames: 25, sourceFrames: 100, processedFrames: 9 } })) });
+      return response(batch);
+    }
+    const camera = batch.cameras.find(c => url.endsWith(c.jobId));
+    return response({ jobId: camera.jobId, processing: {}, events: [] });
+  });
+  const run = ui.showBatch(batch.batchId);
+  await flush(); await flush();
+  assert.match(ui.get('#batch-camera-table').children[0].children[1].textContent, /Analyzing.*frame 25 of 100; 9 samples/);
+  assert.match(ui.get('#batch-status').textContent, /Recording 1\/2/);
+  await run;
+});
+
+test('cancelled camera rows explain cancellation instead of showing unavailable', async () => {
+  const batch = recoveredBatch();
+  batch.status = 'cancelled';
+  batch.cameras = batch.cameras.map(c => ({ ...c, status: 'cancelled' }));
+  const ui = harness(async url => response(url.endsWith('/health') ? { status: 'ok' } : batch));
+  await ui.showBatch(batch.batchId);
+  assert.equal(ui.get('#batch-camera-table').children[0].children[1].textContent, 'Cancelled');
 });
 
 test('raw simulator values retain units across cards, table, chart axes and tooltips', async () => {
@@ -492,7 +525,7 @@ test('batch response renders combined results only for the selected complete cam
     } else {
       assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '12');
       assert.match(ui.get('#batch-summary').textContent, /32 combined tuples/);
-      assert.equal(ui.get('#batch-recovery-id').value, batchId);
+      assert.match(ui.get('#batch-summary').textContent, new RegExp(batchId));
       assert.equal(ui.buttons[0].disabled, true);
     }
   }
@@ -510,8 +543,7 @@ test('all-failed batch has neutral metrics, clear terminal context and no saved-
     if (url.includes('/cameras/')) return response({ message: 'Unsupported video format.' }, false);
     return response(batch);
   });
-  ui.get('#batch-recovery-id').value = batchId;
-  await ui.get('#recover-batch-button').emit('click');
+  await ui.showBatch(batchId);
   assert.equal(ui.get('#run-status').textContent, 'Failed');
   assert.match(ui.get('#profile-run-info').textContent, /No camera analysis succeeded/);
   assert.equal(ui.get('[data-metric="latency"]').children[0].textContent, '—');

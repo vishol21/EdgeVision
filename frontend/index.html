@@ -94,8 +94,6 @@
           <div class="video-actions"><button id="analyze-batch-button" class="button button-edge" type="button" disabled>Analyze camera recordings</button><button id="cancel-batch" class="button" type="button" hidden>Cancel batch</button><span id="batch-status" role="status" aria-live="polite">Choose recordings to begin.</span></div>
           <p id="batch-error" class="video-error" role="alert" hidden></p>
           <p id="batch-summary" class="simulation-note"></p>
-          <div class="batch-recovery"><label for="batch-recovery-id">Recover a recording batch by ID</label><input id="batch-recovery-id" type="text" maxlength="32" placeholder="32-character batch ID" autocomplete="off"><button id="recover-batch-button" class="button" type="button">Load batch comparison</button></div>
-          <p class="simulation-note">Use the Batch ID shown in the batch summary, not an individual recording's Job ID. Saved reports and annotated videos load without re-uploading originals.</p>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable results table"><table><thead><tr><th>Camera / recording</th><th>Status</th><th>Analytics</th></tr></thead><tbody id="batch-camera-table"><tr><td colspan="3">No camera recordings selected.</td></tr></tbody></table></div>
         </div>
       </section>

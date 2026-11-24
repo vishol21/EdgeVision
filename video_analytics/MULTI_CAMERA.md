@@ -10,7 +10,7 @@ Uploads stream to private files. Python analyzes one camera at a time using the 
 
 If at least one camera succeeds, both placements run on the exact same combined profile. Partial success explicitly excludes failed cameras and keeps their errors visible. If all cameras fail, no combined simulation runs. If simulation fails, successful camera analytics remain available. The aggregate counts sum observations, rule events and camera-scoped tracking IDs; they do not identify the same person or vehicle across cameras. Zero events are not evidence of safety.
 
-Save the batch ID shown in the summary. Refresh deliberately starts with neutral standalone results. Enter the saved ID under **Recover a recording batch by ID** to load that batch explicitly, including after a Node restart. The existing virtual-camera controls stay inactive while a recording comparison is selected; switching to virtual-camera simulation clears the shared result view.
+The manual batch-ID reload field and button have been removed. A new batch displays its reports and comparison automatically. Refresh deliberately starts with neutral standalone results; saved batch APIs and original artifacts remain available. The existing virtual-camera controls stay inactive while a recording comparison is selected; switching to virtual-camera simulation clears the shared result view.
 
 ## Resource and processing implications
 

@@ -301,7 +301,21 @@ function createMultiVideoApi(deps) {
           : 'This is a single-video Job ID, not a Batch ID. Use the Batch ID from Multiple camera recordings.');
         throw httpError(404, 'No saved batch was found for this Batch ID in this project. Check the ID and use the same project/server where it was created.');
       }
-      if (request.method === 'GET' && !match[2]) { sendJson(response, 200, publicBatch(batch)); return; }
+      if (request.method === 'GET' && !match[2]) {
+        const view = publicBatch(batch);
+        // Progress is a live response field, not a change to historical manifests.
+        if (activeBatches.has(batch.batchId) && batch.status === 'processing') {
+          for (const [index, camera] of view.cameras.entries()) {
+            if (camera.status !== 'processing' || !camera.jobId) continue;
+            const job = await getVideoJob(camera.jobId);
+            if (!job) continue;
+            camera.frameProgress = job.frameProgress || null;
+            camera.message = job.message || 'Loading the detection model.';
+            view.message = `Recording ${index + 1}/${view.cameras.length}: ${camera.filename}. ${camera.message}`;
+          }
+        }
+        sendJson(response, 200, view); return;
+      }
       if (request.method === 'POST' && match[2] === 'cancel' && !match[3]) {
         if (batch.status === 'cancelled') { sendJson(response, 200, publicBatch(batch)); return; }
         if (!['draft', 'processing', 'simulation_running'].includes(batch.status)) throw httpError(409, 'This batch has already finished.');
