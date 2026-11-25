@@ -692,7 +692,6 @@
       eventList.append(card);
     }
 
-    document.querySelector('#report-download').href = `/api/video/results/${jobId}?download=1`;
     videoResults.hidden = false;
   }
 

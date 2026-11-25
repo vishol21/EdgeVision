@@ -467,7 +467,7 @@ Automatic review suggestions work without scene regions. Ordinary person sightin
 
 **Robbery and accident classification are not implemented.** Region-dependent activity rules still require appropriate regions. Older saved reports retain their original events and do not gain new review markers automatically. Reports state whether review suggestions ran, and timeline buttons seek the saved annotated video when its codec is supported. Open/Download links remain available otherwise.
 
-**Download summary report** creates a readable text report in the browser; **Full data (JSON)** retains the existing saved-report download. No additional report is written to the server by the summary download.
+**Download summary report** creates a readable text report in the browser. The Full data (JSON) dashboard button has been removed; saved JSON reports and backend report APIs remain intact. No additional report is written to the server by the summary download.
 
 Focused regressions:
 
